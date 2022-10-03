@@ -43,8 +43,6 @@ def test_columns(df_1, df_2, df_3):
 
 
 # Are the values numbers
-
-
 @pytest.mark.mandatory
 def test_values(df_1, df_2, df_3):
     dt.validate(df_1['Value in USD'], int)
