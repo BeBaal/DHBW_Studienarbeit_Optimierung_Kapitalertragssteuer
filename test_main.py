@@ -1,50 +1,52 @@
+"""_summary_
+
+    Returns:
+        _type_: _description_
+    """
 import pytest
-import pandas as pd
 import datatest as dt
-from main import main
-main()
-
-# load the excel files
-# ToDo simplify code and return array with tables / dataframes to loop over
+from main import load_data
 
 
-@pytest.fixture(scope='module')
-@dt.working_directory(__file__)
-def df_1():
-    xls = pd.ExcelFile(
-        '../Daten/Daten_Studienarbeit_Optimierung_Kapitalertragssteuer.xlsx')
-    return pd.read_excel(xls, 'MSCI_World', header=0)
-
-
-@pytest.fixture(scope='module')
-@dt.working_directory(__file__)
-def df_2():
-    xls = pd.ExcelFile(
-        '../Daten/Daten_Studienarbeit_Optimierung_Kapitalertragssteuer.xlsx')
-    return pd.read_excel(xls, 'MSCI_EM', header=0)
-
-
-@pytest.fixture(scope='module')
-@dt.working_directory(__file__)
-def df_3():
-    xls = pd.ExcelFile(
-        '../Daten/Daten_Studienarbeit_Optimierung_Kapitalertragssteuer.xlsx')
-    return pd.read_excel(xls, 'MSCI_ACWI', header=0)
-
-
-# Do the title columns have the right names
-def test_columns(df_1, df_2, df_3):
-    dt.validate(df_1.columns[0], {'Date'})
-    dt.validate(df_1.columns[1], {'Value in USD'})
-    dt.validate(df_2.columns[0], {'Date'})
-    dt.validate(df_2.columns[1], {'Value in USD'})
-    dt.validate(df_3.columns[0], {'Date'})
-    dt.validate(df_3.columns[1], {'Value in USD'})
-
-
-# Are the values numbers
 @pytest.mark.mandatory
-def test_values(df_1, df_2, df_3):
-    dt.validate(df_1['Value in USD'], int)
-    dt.validate(df_2['Value in USD'], int)
-    dt.validate(df_3['Value in USD'], int)
+def test_columns():
+    """Do the title columns have the right names?
+    """
+    dataframe_array = load_data()
+    for t_counter, dataframe in enumerate(dataframe_array):
+        dt.validate(dataframe.columns[0], {'Date'})
+        dt.validate(dataframe.columns[1], {'Value in USD'})
+
+        # dataframe = table_calc(
+        #     dataframe,
+        #     200,
+        #     12,
+        #     t_counter,
+        #     0.01,
+        #     800)[0].copy()
+        # dt.validate(dataframe.columns[2], {'%-change'})
+        # dt.validate(dataframe.columns[3], {'not taxed investment'})
+        # dt.validate(dataframe.columns[4], {
+        #             'monthly Contribution accumulation'})
+        # dt.validate(dataframe.columns[5], {'Account Balance'})
+        # dt.validate(dataframe.columns[6], {'Not taxed Profit'})
+        # dt.validate(dataframe.columns[7], {'Taxed Profit'})
+        # dt.validate(dataframe.columns[8], {'Reinvestment'})
+
+
+@pytest.mark.mandatory
+def test_data_type():
+    """Are the values numbers?
+    """
+    dataframe_array = load_data()
+    for dataframe in dataframe_array:
+        dt.validate(dataframe['Value in USD'], int)
+
+
+@pytest.mark.mandatory
+def test_null_values():
+    """Are the values numbers?
+    """
+    dataframe_array = load_data()
+    for dataframe in dataframe_array:
+        dt.validate(dataframe.isnull().values.any(), False)

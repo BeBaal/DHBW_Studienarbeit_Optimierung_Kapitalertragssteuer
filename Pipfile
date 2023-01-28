@@ -4,8 +4,15 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+matplotlib = "*"
+pandas = "*"
+openpyxl = "*"
 
 [dev-packages]
+pylint = "*"
+autopep8 = "*"
+pytest = "*"
+datatest = "*"
 
 [requires]
 python_version = "3.10"
