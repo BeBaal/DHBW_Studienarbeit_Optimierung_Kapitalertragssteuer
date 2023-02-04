@@ -1,7 +1,15 @@
 /.pytest_cache
 /__pycache__
+/.vscode
 Dataframe_Export_0.CSV
 Dataframe_Export_1.CSV
 Dataframe_Export_2.CSV
+Dataframe_Export_3.CSV
 Result_Export.CSV
+Result_Descriptive_Info.CSV
 settings.json
+Histogram_geometric_mean_return_of_index.svg
+Logfiles/logfile_Month_11.txt
+Logfiles/logfile_Month_12.txt
+Logfiles/logfile_Month_24.txt
+Logfiles/logfile_Month_36.txt
