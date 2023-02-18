@@ -4,16 +4,16 @@ DataComPy Comparison
 DataFrame Summary
 -----------------
 
-  DataFrame  Columns  Rows
-0  Original        9    12
-1       New        8    12
+          DataFrame  Columns  Rows
+0        Test_Files        9    12
+1  Generated_Output        8    12
 
 Column Summary
 --------------
 
 Number of columns in common: 8
-Number of columns in Original but not in New: 1
-Number of columns in New but not in Original: 0
+Number of columns in Test_Files but not in Generated_Output: 1
+Number of columns in Generated_Output but not in Test_Files: 0
 
 Row Summary
 -----------
@@ -23,8 +23,8 @@ Any duplicates on match values: No
 Absolute Tolerance: 0.01
 Relative Tolerance: 0
 Number of rows in common: 12
-Number of rows in Original but not in New: 0
-Number of rows in New but not in Original: 0
+Number of rows in Test_Files but not in Generated_Output: 0
+Number of rows in Generated_Output but not in Test_Files: 0
 
 Number of rows with some compared columns unequal: 0
 Number of rows with all compared columns equal: 12

@@ -4,16 +4,16 @@ DataComPy Comparison
 DataFrame Summary
 -----------------
 
-  DataFrame  Columns  Rows
-0  Original        9    24
-1       New        8    24
+          DataFrame  Columns  Rows
+0        Test_Files        9    24
+1  Generated_Output        8    24
 
 Column Summary
 --------------
 
 Number of columns in common: 8
-Number of columns in Original but not in New: 1
-Number of columns in New but not in Original: 0
+Number of columns in Test_Files but not in Generated_Output: 1
+Number of columns in Generated_Output but not in Test_Files: 0
 
 Row Summary
 -----------
@@ -23,28 +23,16 @@ Any duplicates on match values: No
 Absolute Tolerance: 0.01
 Relative Tolerance: 0
 Number of rows in common: 24
-Number of rows in Original but not in New: 0
-Number of rows in New but not in Original: 0
+Number of rows in Test_Files but not in Generated_Output: 0
+Number of rows in Generated_Output but not in Test_Files: 0
 
-Number of rows with some compared columns unequal: 1
-Number of rows with all compared columns equal: 23
+Number of rows with some compared columns unequal: 0
+Number of rows with all compared columns equal: 24
 
 Column Comparison
 -----------------
 
-Number of columns compared with some values unequal: 1
-Number of columns compared with all values equal: 7
-Total number of values which compare unequal: 1
-
-Columns with Unequal Values or Types
-------------------------------------
-
-                 Column Original dtype New dtype  # Unequal    Max Diff  # Null Diff
-0  not taxed investment        float64   float64          1  199.998064            0
-
-Sample Rows with Unequal Values
--------------------------------
-
-    not taxed investment (Original)  not taxed investment (New)
-23                          5115.62                 5315.618064
+Number of columns compared with some values unequal: 0
+Number of columns compared with all values equal: 8
+Total number of values which compare unequal: 0
 

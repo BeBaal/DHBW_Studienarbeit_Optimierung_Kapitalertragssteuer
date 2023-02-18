@@ -20,6 +20,7 @@ import datacompy
 from main import load_data
 from main import table_calculation
 from main import setup_calculation
+from main import export_calc_df_to_csv
 
 
 @pytest.mark.mandatory
@@ -38,7 +39,7 @@ def test_data_type():
     """
     dataframe_array = load_data()
     for dataframe in dataframe_array:
-        dt.validate(dataframe['value_in_usd'], int)
+        dt.validate(dataframe.value_in_usd, int)
 
 
 @pytest.mark.mandatory
@@ -66,7 +67,10 @@ def test_table_calculation():
     for counter, month in enumerate(test_months):
         # Load Excel file
         test_files.append(pd.read_csv(
-            path + 'Dataframe_Expected_Result_' + str(month) + '_Months.CSV',
+            path
+            + 'Dataframe_Expected_Result_'
+            + str(month)
+            + '_Months.CSV',
             header=0))
 
         calc_table = pd.DataFrame(data=table_array[0])
@@ -76,6 +80,8 @@ def test_table_calculation():
         calc_table = table_calculation(calc_table, month, 0, 0.01, 800)[0]
 
         calc_table = pd.DataFrame(data=calc_table)
+
+        export_calc_df_to_csv(calc_table, counter)
 
         # use datacompy
 
@@ -88,7 +94,7 @@ def test_table_calculation():
             df1_name='Test_Files',
             df2_name='Generated_Output'
         )
-        #dt.validate(compare.matches(ignore_extra_columns=False), True)
+        # dt.validate(compare.matches(ignore_extra_columns=False), True)
 
         # This method prints out a human-readable report summarizing
         # and sampling differences
