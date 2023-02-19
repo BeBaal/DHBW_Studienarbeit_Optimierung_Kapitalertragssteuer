@@ -77,7 +77,7 @@ def test_table_calculation():
 
         calc_table = setup_calculation(calc_table, 0, month)
 
-        calc_table = table_calculation(calc_table, month, 0, 0.01, 800)[0]
+        calc_table = table_calculation(calc_table, month, 0, 0.01)
 
         calc_table = pd.DataFrame(data=calc_table)
 

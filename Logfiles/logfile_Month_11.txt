@@ -6,14 +6,14 @@ DataFrame Summary
 
           DataFrame  Columns  Rows
 0        Test_Files        9    11
-1  Generated_Output        8    11
+1  Generated_Output       11     1
 
 Column Summary
 --------------
 
-Number of columns in common: 8
-Number of columns in Test_Files but not in Generated_Output: 1
-Number of columns in Generated_Output but not in Test_Files: 0
+Number of columns in common: 0
+Number of columns in Test_Files but not in Generated_Output: 9
+Number of columns in Generated_Output but not in Test_Files: 11
 
 Row Summary
 -----------
@@ -22,17 +22,32 @@ Matched on: index
 Any duplicates on match values: No
 Absolute Tolerance: 0.01
 Relative Tolerance: 0
-Number of rows in common: 11
-Number of rows in Test_Files but not in Generated_Output: 0
+Number of rows in common: 1
+Number of rows in Test_Files but not in Generated_Output: 10
 Number of rows in Generated_Output but not in Test_Files: 0
 
 Number of rows with some compared columns unequal: 0
-Number of rows with all compared columns equal: 11
+Number of rows with all compared columns equal: 1
 
 Column Comparison
 -----------------
 
 Number of columns compared with some values unequal: 0
-Number of columns compared with all values equal: 8
+Number of columns compared with all values equal: 0
 Total number of values which compare unequal: 0
+
+Sample Rows Only in Test_Files (First 10 Columns)
+-------------------------------------------------
+
+    index          date  value_in_usd  %-change  not_taxed_investment  not_taxed_profit  taxed_profit  reinvestment  transaction_cost
+1       1  Feb 27, 1970           101      1.00                 200.0               0.0           0.0           0.0               0.0
+2       2  Mar 31, 1970           102      0.99                 200.0               0.0           0.0           0.0               0.0
+6       6  Jul 31, 1970           106      0.95                 200.0               0.0           0.0           0.0               0.0
+5       5  Jun 30, 1970           105      0.96                 200.0               0.0           0.0           0.0               0.0
+4       4  May 29, 1970           104      0.97                 200.0               0.0           0.0           0.0               0.0
+9       9  Oct 30, 1970           109      0.93                 200.0               0.0           0.0           0.0               0.0
+7       7  Aug 31, 1970           107      0.94                 200.0               0.0           0.0           0.0               0.0
+10     10  Nov 30, 1970           110      0.92                 200.0               0.0           0.0           0.0               0.0
+3       3  Apr 30, 1970           103      0.98                 200.0               0.0           0.0           0.0               0.0
+8       8  Sep 30, 1970           108      0.93                 200.0               0.0           0.0           0.0               0.0
 
