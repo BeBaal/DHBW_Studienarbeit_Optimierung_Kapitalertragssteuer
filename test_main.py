@@ -20,7 +20,7 @@ import datacompy
 from main import load_data
 from main import table_calculation
 from main import setup_calculation
-from main import export_calc_df_to_csv
+from main import set_debugging
 
 
 @pytest.mark.mandatory
@@ -55,39 +55,55 @@ def test_null_values():
 def test_table_calculation():
     """Are the values calculated correct?
     """
-    path = './Testfiles/'
+    path_testfiles = './Testfiles/'
+    path_output = './Calculation_Files/'
+
+    set_debugging()
 
     table_array = load_data()
 
-    test_months = [11, 12, 24, 36]  # Corresponding to the test files
+    durations = [11, 12, 24, 36]  # Corresponding to the test files
+
+    monthly_investment_sum = 200
+    transaction_cost = 0.01
 
     # Load Excel sheets
     test_files = []
 
-    for counter, month in enumerate(test_months):
+    for counter, duration in enumerate(durations):
         # Load Excel file
         test_files.append(pd.read_csv(
-            path
+            path_testfiles
             + 'Dataframe_Expected_Result_'
-            + str(month)
+            + str(duration)
             + '_Months.CSV',
             header=0))
 
-        calc_table = pd.DataFrame(data=table_array[0])
+        df_calc = pd.DataFrame(data=table_array[0])
 
-        calc_table = setup_calculation(calc_table, 0, month)
+        df_calc = setup_calculation(df_calc,
+                                    lower_bound_month=0,
+                                    upper_bound_month=duration,
+                                    monthly_investment_sum=monthly_investment_sum)
 
-        calc_table = table_calculation(calc_table, month, 0, 0.01)
+        table_calculation(df_calc,
+                          duration,
+                          counter,
+                          monthly_investment_sum,
+                          transaction_cost)
 
-        calc_table = pd.DataFrame(data=calc_table)
-
-        export_calc_df_to_csv(calc_table, counter)
+        df_calc = pd.read_csv(
+            path_output
+            + 'Dataframe_Export_'
+            + str(counter)
+            + '.CSV',
+            header=0,
+            index_col=0)
 
         # use datacompy
-
         compare = datacompy.Compare(
             test_files[counter],  # First dataframe to compare
-            calc_table,  # Second dataframe to compare
+            df_calc,  # Second dataframe to compare
             on_index=True,  # Join dataframes on index
             abs_tol=0.01,
             rel_tol=0,
@@ -100,7 +116,7 @@ def test_table_calculation():
         # and sampling differences
         print(compare.report())
         with open('Logfiles/logfile_Month_'
-                  + str(month)
+                  + str(duration)
                   + '.txt',
                   'w',
                   encoding='utf-8') as file:

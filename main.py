@@ -10,10 +10,14 @@ import time
 import matplotlib.pyplot as plt
 import pandas as pd
 
+
 # Declaration of class variables
-LIST_OF_MONTHLY_CONTRIBUTIONS = [200, 400]
-LIST_OF_INVESTMENT_DURATIONS = [24, 30, 36]
-LIST_OF_TRANSACTION_COST = [0, 0.01, 0.02]  # transaction cost per sell order
+DEBUGGING = True
+SELL_OPTION = [True, False]
+CUT_INDEX_FOR_SAME_INTERVAL = True
+LIST_OF_MONTHLY_CONTRIBUTIONS = [240, 360]
+LIST_OF_INVESTMENT_DURATIONS = [24]
+LIST_OF_TRANSACTION_COST = [0.01]  # transaction cost per sell order
 TAX_FREE_CAPITAL_GAIN = 800  # tax free capital gain allowance
 FILE_PATH_FOR_IMAGES = r'./Results/Figures/'  # Path for image export
 CM = 1/2.54                  # centimeters in inches
@@ -36,11 +40,13 @@ def main():
     # Create array of dataframes for looping
     initial_index_time_series = load_data()
 
+    plot_index_funds(initial_index_time_series)
+
     results = iteration_over_monthly_investment_sum(
         initial_index_time_series, results)
 
     export_results_df_to_csv(results)
-    generate_descriptive_info_index_funds(results)
+    generate_descriptive_info_results(results)
     plot_results(results)
 
     # get end time
@@ -51,56 +57,130 @@ def main():
     print('Execution time:', elapsed_time, 'seconds')
 
 
-def iteration_over_monthly_investment_sum(initial_index_time_series, results):
+def iteration_over_sell_option(
+        initial_index_time_series,
+        results):
+
+    # ToDo iteration_over_sell_option needs to be implemented
+
+    # for sell_option in SELL_OPTION:
+
+    # new_results = iteration_over_monthly_investment_sum(
+    #     initial_index_time_series,
+    #     results,
+    #     sell_option)
+
+    # results = pd.concat([results, new_results])
+
+    return results
+
+
+def iteration_over_monthly_investment_sum(
+        initial_index_time_series,
+        results):
+    """_summary_
+
+    Args:
+        initial_index_time_series (_type_): _description_
+        results (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     for monthly_investment_sum in LIST_OF_MONTHLY_CONTRIBUTIONS:
 
-        new_results = iteration_over_transaction_cost(initial_index_time_series,
-                                                      results,
-                                                      monthly_investment_sum)
+        new_results = iteration_over_transaction_cost(
+            initial_index_time_series,
+            results,
+            monthly_investment_sum)
 
         results = pd.concat([results, new_results])
 
     return results
 
 
-def iteration_over_transaction_cost(initial_index_time_series, results, monthly_investment_sum):
+def iteration_over_transaction_cost(initial_index_time_series,
+                                    results,
+                                    monthly_investment_sum):
+    """_summary_
+
+    Args:
+        initial_index_time_series (_type_): _description_
+        results (_type_): _description_
+        monthly_investment_sum (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     for transaction_cost in LIST_OF_TRANSACTION_COST:
 
-        new_results = iteration_over_investment_duration(initial_index_time_series,
-                                                         results,
-                                                         monthly_investment_sum,
-                                                         transaction_cost)
+        new_results = iteration_over_investment_duration(
+            initial_index_time_series,
+            results,
+            monthly_investment_sum,
+            transaction_cost)
 
         results = pd.concat([results, new_results])
 
     return results
 
 
-def iteration_over_investment_duration(initial_index_time_series, results, monthly_investment_sum, transaction_cost):
+def iteration_over_investment_duration(
+        initial_index_time_series,
+        results,
+        monthly_investment_sum,
+        transaction_cost):
+    """_summary_
 
+    Args:
+        initial_index_time_series (_type_): _description_
+        results (_type_): _description_
+        monthly_investment_sum (_type_): _description_
+        transaction_cost (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     for duration in LIST_OF_INVESTMENT_DURATIONS:
 
-        new_results = iteration_over_index_funds(initial_index_time_series,
-                                                 results,
-                                                 monthly_investment_sum,
-                                                 transaction_cost,
-                                                 duration)
+        new_results = iteration_over_index_funds(
+            initial_index_time_series,
+            results,
+            monthly_investment_sum,
+            transaction_cost,
+            duration)
 
         results = pd.concat([results, new_results])
 
     return results
 
 
-def iteration_over_index_funds(initial_index_time_series, results, monthly_investment_sum, transaction_cost, duration):
+def iteration_over_index_funds(
+        initial_index_time_series, results,
+        monthly_investment_sum,
+        transaction_cost,
+        duration):
+    """_summary_
+
+    Args:
+        initial_index_time_series (_type_): _description_
+        results (_type_): _description_
+        monthly_investment_sum (_type_): _description_
+        transaction_cost (_type_): _description_
+        duration (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     index_time_series = initial_index_time_series.copy()
 
     # loop over all index time series
     for index_counter, _ in enumerate(index_time_series):
 
-        new_results = iteration_over_time_series(
+        new_results = iteration_over_time_slices(
             initial_index_time_series,
             results,
             index_counter,
@@ -113,7 +193,26 @@ def iteration_over_index_funds(initial_index_time_series, results, monthly_inves
     return results
 
 
-def iteration_over_time_series(initial_index_time_series, results, index_counter, monthly_investment_sum, transaction_cost, duration):
+def iteration_over_time_slices(
+        initial_index_time_series,
+        results,
+        index_counter,
+        monthly_investment_sum,
+        transaction_cost,
+        duration):
+    """_summary_
+
+    Args:
+        initial_index_time_series (_type_): _description_
+        results (_type_): _description_
+        index_counter (_type_): _description_
+        monthly_investment_sum (_type_): _description_
+        transaction_cost (_type_): _description_
+        duration (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     df_calc = initial_index_time_series[index_counter].copy()
 
@@ -121,7 +220,6 @@ def iteration_over_time_series(initial_index_time_series, results, index_counter
     upper_bound_month = duration
     lower_bound_month = 0      # Start Value / end upper_bound minus months
     max_lower_bound_month = len(df_calc.index) - duration
-    # max_lower_bound_month = 1 # setting for debugging
 
     # Iterate over all time intervals in the dataset
     while lower_bound_month < max_lower_bound_month:
@@ -149,6 +247,13 @@ def iteration_over_time_series(initial_index_time_series, results, index_counter
     return results
 
 
+def set_debugging():
+    """_summary_
+    """
+    global DEBUGGING
+    DEBUGGING = True
+
+
 def load_data():
     """This function load the index fund timeseries and gives the result
     back in a dataframe. There are four index timeseries. One for
@@ -158,89 +263,122 @@ def load_data():
         pandas dataframe:  Initial index fund time series
     """
     # Load Excel file
-    __xls = pd.ExcelFile(
+    xls = pd.ExcelFile(
         '../daten/daten_Studienarbeit_Optimierung_Kapitalertragssteuer.xlsx')
 
     # Load Excel sheets
     sheets = []
 
-    sheets.append(pd.read_excel(__xls, 'Testdata', header=0))
-    # sheets.append(pd.read_excel(__xls, 'MSCI_World', header=0))
-    # sheets.append(pd.read_excel(__xls, 'MSCI_EM', header=0))
-    # sheets.append(pd.read_excel(__xls, 'MSCI_ACWI', header=0))
+    if DEBUGGING is True:
+        sheets.append(pd.read_excel(xls, 'Testdata', header=0))
+    else:
+        sheets.append(pd.read_excel(xls, 'MSCI_World', header=0))
+        sheets.append(pd.read_excel(xls, 'MSCI_EM', header=0))
+        sheets.append(pd.read_excel(xls, 'MSCI_ACWI', header=0))
 
-    # Create array of dataframes for looping
+    # Create array of dataframes
     initial_df_array = []
-    for sheet in sheets:
-        initial_df_array.append(pd.DataFrame(
-            sheet,
-            columns=['date', 'value_in_usd']))
+
+    initial_df_array = [pd.DataFrame(data=sheet, columns=['date', 'value_in_usd'])
+                        for sheet in sheets]
+
+    # Change date format to datetime
+    initial_df_array = [df.assign(
+        date=pd.to_datetime(df['date']))
+        for df in initial_df_array]
+
+    # Calculate additional features for further use
+    initial_df_array = [
+        df.assign(
+            year=df['date'].dt.year,
+            month=df['date'].dt.month,
+            day=df['date'].dt.day)
+        for df in initial_df_array]
+
+    # Filter data to the smallest denominator of the time series
+    initial_df_array = [
+        df[~(df['date'] < '1988-01-01')]
+        for df in initial_df_array]
 
     return initial_df_array
 
 
-def end_of_capital_year(df_calc, r_counter, monthly_investment_sum, transaction_cost):
+def end_of_capital_year(
+        df_calc,
+        current_period_index,
+        monthly_investment_sum,
+        transaction_cost):
+    """_summary_
+
+    Args:
+        df_calc (_type_): _description_
+        r_counter (_type_): _description_
+        monthly_investment_sum (_type_): _description_
+        transaction_cost (_type_): _description_
+    """
 
     tax_free_capital_gain = TAX_FREE_CAPITAL_GAIN
     transaction_sum = 0.0
-    count = 0
+    former_period_index = 0
+
+    current_value_of_index = df_calc.value_in_usd.values[current_period_index]
 
     # ToDo Extract function lookup former capital gains
     # Look back in table for capital gains and losses
-    while count < r_counter:
+    while former_period_index < current_period_index:
 
         # Calculate still to be taxed_profit on a row basis
         # Current Value of fund in relation to buy in value
-        df_calc.not_taxed_profit.values[count] = (
-            df_calc.not_taxed_investment.values[count]
-            * df_calc.value_in_usd.values[r_counter]
-            / df_calc.value_in_usd.values[count]
-            - df_calc.not_taxed_investment.values[count]
+        df_calc.not_taxed_profit.values[former_period_index] = (
+            df_calc.not_taxed_investment.values[former_period_index]
+            * df_calc.value_in_usd.values[current_period_index]
+            / df_calc.value_in_usd.values[former_period_index]
+            - df_calc.not_taxed_investment.values[former_period_index]
         )
 
         # Check if tax free capital gain allowance is available
         # greater than the profit in the period and if profit is
         # greater then rest allowance.
 
-        if tax_free_capital_gain > df_calc.not_taxed_profit.values[count] \
+        if tax_free_capital_gain > df_calc.not_taxed_profit.values[former_period_index] \
                 and tax_free_capital_gain != 0:
 
             # Add order value to transaction sum
             transaction_sum = transaction_sum \
-                + df_calc.not_taxed_profit.values[count] \
-                + df_calc.not_taxed_investment.values[count]
+                + df_calc.not_taxed_profit.values[former_period_index] \
+                + df_calc.not_taxed_investment.values[former_period_index]
 
             # Detract the profit from tax free allowance
             tax_free_capital_gain = tax_free_capital_gain \
-                - df_calc.not_taxed_profit.values[count]
+                - df_calc.not_taxed_profit.values[former_period_index]
 
             # Keep track of the taxed profits for statistics
-            df_calc.taxed_profit.values[count] \
-                += df_calc.not_taxed_profit.values[count]
+            df_calc.taxed_profit.values[former_period_index] \
+                += df_calc.not_taxed_profit.values[former_period_index]
 
             # All profits of the period were sold
-            df_calc.not_taxed_profit.values[count] = 0
+            df_calc.not_taxed_profit.values[former_period_index] = 0
 
             # Zero the buy order
-            df_calc.not_taxed_investment.values[count] = 0
+            df_calc.not_taxed_investment.values[former_period_index] = 0
 
         else:
             # If the rest allowance is smaller then the profit, the
             # buy order needs to be split into two parts.
 
             # Skip zero lines, NaN and zero allowance
-            if (df_calc.not_taxed_profit.values[count] == 0
-                    or df_calc.not_taxed_profit.values[count] is None
+            if (df_calc.not_taxed_profit.values[former_period_index] == 0
+                or df_calc.not_taxed_profit.values[former_period_index] is None
                     or tax_free_capital_gain == 0):
-                count += 1
+                former_period_index += 1
                 continue
 
             # Calculate the rest buy order for future taxation. The
             # calculation is limited to the rest tax free allowance.
-            df_calc.not_taxed_investment.values[count] = (
-                df_calc.not_taxed_investment.values[count]
-                - df_calc.not_taxed_investment.values[count]
-                / (df_calc.not_taxed_profit.values[count]
+            df_calc.not_taxed_investment.values[former_period_index] = (
+                df_calc.not_taxed_investment.values[former_period_index]
+                - df_calc.not_taxed_investment.values[former_period_index]
+                / (df_calc.not_taxed_profit.values[former_period_index]
                     / tax_free_capital_gain)
             )
 
@@ -248,29 +386,30 @@ def end_of_capital_year(df_calc, r_counter, monthly_investment_sum, transaction_
             # Therefore the allowance is zero
             tax_free_capital_gain = 0
 
-        count += 1
+        former_period_index += 1
 
     # Save the transaction sum as a reinvestment
-    df_calc.reinvestment.values[r_counter] = transaction_sum
+    df_calc.reinvestment.values[current_period_index] = transaction_sum
 
     # Create a new buy order so it can be taxed in the future
-    df_calc.not_taxed_investment.values[r_counter] = (
-        df_calc.reinvestment.values[r_counter]
+    df_calc.not_taxed_investment.values[current_period_index] = (
+        df_calc.reinvestment.values[current_period_index]
         + monthly_investment_sum)
 
     # Deduct the transaction cost from the value of investment from
     # previous periods
-    df_calc.transaction_cost.values[r_counter] += [
+    df_calc.transaction_cost.values[current_period_index] += [
         transaction_sum
         * transaction_cost
     ]
 
 
-def table_calculation(df_calc,
-                      months,
-                      t_counter,
-                      monthly_investment_sum,
-                      transaction_cost):
+def table_calculation(
+        df_calc,
+        duration,
+        t_counter,
+        monthly_investment_sum,
+        transaction_cost):
     """
     This method handles most of the df calculation on a row level.
 
@@ -293,29 +432,33 @@ def table_calculation(df_calc,
     for r_counter, _ in enumerate(df_calc.iterrows()):
 
         # Sell stocks each year in Dec except if first period of observation
-        if df_calc.date.values[r_counter].startswith('Dec') and r_counter != 0:
+        if df_calc.month.values[r_counter] == 12 and r_counter != 0:
 
-            end_of_capital_year(df_calc,
-                                r_counter,
-                                monthly_investment_sum,
-                                transaction_cost)
+            end_of_capital_year(
+                df_calc,
+                r_counter,
+                monthly_investment_sum,
+                transaction_cost)
 
-    results = calc_results(df_calc,
-                           t_counter,
-                           months,
-                           monthly_investment_sum)
+    results = calc_results(
+        df_calc,
+        t_counter,
+        duration,
+        monthly_investment_sum)
 
     # ToDo calculate value at the end
 
-    export_calc_df_to_csv(df_calc, t_counter)
+    export_calc_df_to_csv(df_calc,
+                          t_counter)
 
     return results
 
 
-def setup_calculation(df_calc,
-                      lower_bound_month,
-                      upper_bound_month,
-                      monthly_investment_sum):
+def setup_calculation(
+        df_calc,
+        lower_bound_month,
+        upper_bound_month,
+        monthly_investment_sum):
     """
     This method setups the used dfs.
 
@@ -376,27 +519,61 @@ def plot_results(df_results):
     plt.ylabel("count of observations")
 
     plt.savefig(FILE_PATH_FOR_IMAGES
-                + "Histogram_geometric_mean_return_of_index.svg")
+                + "Histogram_ROI.svg")
     plt.close()
 
 
-def generate_descriptive_info_index_funds(results):
+def generate_descriptive_info_results(results):
+    """_summary_
+
+    Args:
+        results (_type_): _description_
+    """
     results.describe().to_csv(
         './Results/tables/Result_Descriptive_Info.CSV'
     )
 
 
-def generate_graphs_index_funds():
-    pass
+def plot_index_funds(initial_index_time_series):
+    """_summary_
+    """
+    path = ""
+
+    # do not change the initial_index_time_series
+    index_time_series = initial_index_time_series
+
+    for index in index_time_series:
+        index['value_in_percent'] = [element / index.value_in_usd.values[0]
+                                     for element in index.value_in_usd.values]
+
+        plt.plot(index.date, index.value_in_percent)
+
+    # name the dataframes for plotting
+    if DEBUGGING is True:
+        plt.legend("Testdata")
+    else:
+        plt.legend(["MSCI_World", "MSCI_EM", "MSCI_ACWI"])
+
+    plt.title("Index values over time")
+    plt.ylabel("price")
+    plt.yscale("linear")
+    plt.xlabel("date")
+    plt.savefig(FILE_PATH_FOR_IMAGES
+                + "Plot_index_performance.svg")
+    plt.close()
 
 
-def calc_results(df_calc, t_counter, months, monthly_investment_sum):
+def calc_results(
+        df_calc,
+        t_counter,
+        duration,
+        monthly_investment_sum):
     """_summary_
     """
     df_results = pd.DataFrame()
 
     df_results.loc[0, 'stock_market_index'] = t_counter
-    df_results.loc[0, 'duration_in_months'] = months
+    df_results.loc[0, 'duration_in_months'] = duration
 
     df_results['start_date'] = df_calc.date.iloc[0]
     df_results['end_date'] = df_calc.date.iloc[-1]
@@ -423,12 +600,12 @@ def calc_results(df_calc, t_counter, months, monthly_investment_sum):
         df_results['realized_profits']
 
     df_results['investment'] = (df_calc.transaction_cost.sum()
-                                + monthly_investment_sum * months)
+                                + monthly_investment_sum * duration)
 
-    df_results['reinvestment'] = (df_calc.reinvestment.sum())
+    df_results['reinvestment'] = df_calc.reinvestment.sum()
 
     df_results['trading_volume'] = (df_calc.reinvestment.sum()
-                                    + monthly_investment_sum * months)
+                                    + monthly_investment_sum * duration)
 
     # calculate value at the end of investment
     investment_value = 0
@@ -460,7 +637,7 @@ def export_results_df_to_csv(results):
 
     # Export df_results to CSV file
     results.sort_index(ascending=True)
-    results.to_csv('./Results/tables/Result_Export.CSV')
+    results.to_csv('./Results/tables/Result_Export.CSV', index=True)
 
 
 def export_calc_df_to_csv(df_calc, t_counter):
