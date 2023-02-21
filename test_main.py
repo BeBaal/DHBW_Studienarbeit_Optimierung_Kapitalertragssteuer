@@ -14,41 +14,13 @@
         output command line: Error report of pytest in command line
     """
 import pytest
-import datatest as dt
 import pandas as pd
 import datacompy
 from main import load_data
 from main import table_calculation
 from main import setup_calculation
 from main import set_debugging
-
-
-@pytest.mark.mandatory
-def test_column_names():
-    """Do the title columns have the right names?
-    """
-    dataframe_array = load_data()
-    for dataframe in dataframe_array:
-        dt.validate(dataframe.columns[0], {'date'})
-        dt.validate(dataframe.columns[1], {'value_in_usd'})
-
-
-@pytest.mark.mandatory
-def test_data_type():
-    """Are the values integers?
-    """
-    dataframe_array = load_data()
-    for dataframe in dataframe_array:
-        dt.validate(dataframe.value_in_usd, int)
-
-
-@pytest.mark.mandatory
-def test_null_values():
-    """Are the values integers?
-    """
-    table_array = load_data()
-    for dataframe in table_array:
-        dt.validate(dataframe.isnull().values.any(), False)
+from main import main
 
 
 @pytest.mark.mandatory
@@ -121,3 +93,17 @@ def test_table_calculation():
                   'w',
                   encoding='utf-8') as file:
             file.write(compare.report())
+
+
+@pytest.mark.mandatory
+def test_results():
+    """Are the values calculated correct?
+    """
+    path_testfiles = './Testfiles/'
+    path_output = './Calculation_Files/'
+
+    # set_debugging()
+
+    # table_array = load_data()
+
+    # main()

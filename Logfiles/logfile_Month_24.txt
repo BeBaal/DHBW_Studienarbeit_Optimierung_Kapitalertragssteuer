@@ -26,34 +26,13 @@ Number of rows in common: 24
 Number of rows in Test_Files but not in Generated_Output: 0
 Number of rows in Generated_Output but not in Test_Files: 0
 
-Number of rows with some compared columns unequal: 24
-Number of rows with all compared columns equal: 0
+Number of rows with some compared columns unequal: 0
+Number of rows with all compared columns equal: 24
 
 Column Comparison
 -----------------
 
-Number of columns compared with some values unequal: 1
-Number of columns compared with all values equal: 7
-Total number of values which compare unequal: 24
-
-Columns with Unequal Values or Types
-------------------------------------
-
-  Column Test_Files dtype Generated_Output dtype  # Unequal  Max Diff  # Null Diff
-0   date           object                 object         24         0            0
-
-Sample Rows with Unequal Values
--------------------------------
-
-   date (Test_Files) date (Generated_Output)
-10      Nov 30, 1988              1988-11-30
-8       Sep 30, 1988              1988-09-30
-20      Sep 29, 1989              1989-09-29
-1       Feb 29, 1988              1988-02-29
-6       Jul 29, 1988              1988-07-29
-13      Feb 28, 1989              1989-02-28
-16      May 31, 1989              1989-05-31
-0       Jan 29, 1988              1988-01-29
-4       May 31, 1988              1988-05-31
-18      Jul 31, 1989              1989-07-31
+Number of columns compared with some values unequal: 0
+Number of columns compared with all values equal: 8
+Total number of values which compare unequal: 0
 
