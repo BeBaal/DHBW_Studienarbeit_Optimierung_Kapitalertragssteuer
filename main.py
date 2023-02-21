@@ -19,7 +19,7 @@ CUT_INDEX_FOR_SAME_INTERVAL = True
 LIST_OF_MONTHLY_CONTRIBUTIONS = [120, 240]
 LIST_OF_INVESTMENT_DURATIONS = [240, 360]
 LIST_OF_TRANSACTION_COST = [0, 0.01]  # transaction cost per sell order
-TAX_FREE_CAPITAL_GAIN = 800  # tax free capital gain allowance
+TAX_FREE_CAPITAL_GAIN = 100  # tax free capital gain allowance
 FILE_PATH_FOR_IMAGES = r'./Results/Figures/'  # Path for image export
 CM = 1/2.54                  # centimeters in inches
 
@@ -58,6 +58,59 @@ def main():
     # calculate calculation time
     elapsed_time = end_time - start_time
     print('Execution time:', elapsed_time, 'seconds')
+
+
+def plot_distribution(dataframe):
+    """This method plots the distribution of the relevant keyfigures.
+
+    Args:
+        dataframe (pandas dataframe): HR KPI dataframe
+    """
+    logging.info('plot_distribution function was called')
+
+    filenpath_and_name = r'C:\FPA2\Figures\Attribute_Distribution.svg'
+
+    dataframe.hist(bins=25,
+                   figsize=(40, 40),
+                   color='b',
+                   alpha=0.6
+                   )
+
+    # plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+
+    plt.savefig(filenpath_and_name, bbox_inches="tight")
+    plt.close()
+
+
+def plot_correlation(dataframe):
+    """This method plots the correlation of the relevant keyfigures. See also
+    https://medium.com/@szabo.bibor/how-to-create-a-seaborn-correlation-heatmap-in-python-834c0686b88e
+    for example heatmap implementation.
+
+    Args:
+        dataframe (pandas dataframe): HR KPI dataframe
+    """
+    logging.info('plot_cross_correlation function was called')
+
+    # Triangle cross correlation matrix
+    filenpath_and_name = r'C:\FPA2\Figures\Attribute_Cross_Correlation.svg'
+
+    mask = np.triu(np.ones_like(dataframe.corr(numeric_only=True),
+                                dtype=np.bool_))
+
+    heatmap = sns.heatmap(dataframe.corr(numeric_only=True),
+                          vmin=-1,
+                          vmax=1,
+                          mask=mask,
+                          annot=True,
+                          cmap='BrBG',
+                          fmt=".1f")
+
+    heatmap.set_title('Correlation Heatmap')
+
+    plt.tight_layout()
+    plt.savefig(filenpath_and_name)
+    plt.close()
 
 
 def iteration_over_sell_option(
@@ -282,7 +335,7 @@ def load_data():
     else:
         sheets.append(pd.read_excel(xls, 'MSCI_World', header=0))
         sheets.append(pd.read_excel(xls, 'MSCI_EM', header=0))
-        sheets.append(pd.read_excel(xls, 'MSCI_ACWI', header=0))
+        # sheets.append(pd.read_excel(xls, 'MSCI_ACWI', header=0))
 
     # Create array of dataframes
     initial_df_array = []
@@ -411,10 +464,11 @@ def end_of_capital_year(
 
     # Deduct the transaction cost from the value of investment from
     # previous periods
-    df_calc.transaction_cost.values[current_period_index] += [
-        transaction_sum
+    df_calc.transaction_cost.values[current_period_index] = (
+        df_calc.transaction_cost.values[current_period_index]
+        + transaction_sum
         * transaction_cost
-    ]
+    )
 
 
 def table_calculation(
@@ -490,16 +544,14 @@ def setup_calculation(
     df_calc = df_calc.iloc[lower_bound_month:upper_bound_month].copy()
 
     # Calculate percentage changes in new column
-    df_calc.loc[:, '%-change'] = float(0)
-    df_calc.loc[:, '%-change'] = df_calc.loc[:,
-                                             'value_in_usd'].pct_change() * 100
+    df_calc['%-change'] = df_calc['value_in_usd'].pct_change() * 100
     # Fill NaN rows with zeroes
-    df_calc.loc[:, '%-change'] = df_calc.loc[:, '%-change'].fillna(0)
-    df_calc.loc[:, 'not_taxed_investment'] = float(monthly_investment_sum)
-    df_calc.loc[:, 'not_taxed_profit'] = float(0)
-    df_calc.loc[:, 'taxed_profit'] = float(0)
-    df_calc.loc[:, 'reinvestment'] = float(0)
-    df_calc.loc[:, 'transaction_cost'] = float(0)
+    df_calc['%-change'].fillna(value=0, inplace=True)
+    df_calc['not_taxed_investment'] = float(monthly_investment_sum)
+    df_calc['not_taxed_profit'] = float(0)
+    df_calc['taxed_profit'] = float(0)
+    df_calc['reinvestment'] = float(0)
+    df_calc['transaction_cost'] = float(0)
 
     df_calc.reset_index(drop=True, inplace=True)
 
@@ -565,14 +617,16 @@ def plot_index_funds(initial_index_time_series):
     if DEBUGGING is True:
         plt.legend("Testdata")
     else:
-        plt.legend(["MSCI_World", "MSCI_EM", "MSCI_ACWI"])
+        plt.legend(["MSCI_World",
+                    "MSCI_EM",
+                    # "MSCI_ACWI"
+                    ])
 
     plt.title("Index values over time")
     plt.ylabel("price")
     plt.yscale("linear")
     plt.xlabel("date")
-    plt.savefig(FILE_PATH_FOR_IMAGES
-                + "Plot_index_performance.svg")
+    plt.savefig(FILE_PATH_FOR_IMAGES + "Plot_index_performance.svg")
     plt.close()
 
 
@@ -610,7 +664,8 @@ def calc_results_on_df_calc(
     # calculate value at the end of investment
     investment_value = [
         not_taxed_investment * df_calc.value_in_usd.values[-1] / current_value
-        for not_taxed_investment, current_value in zip(df_calc.not_taxed_investment.values, df_calc.value_in_usd.values)
+        for not_taxed_investment, current_value
+        in zip(df_calc.not_taxed_investment.values, df_calc.value_in_usd.values)
         if not_taxed_investment != 0
     ]
 
@@ -626,20 +681,23 @@ def calc_results_on_results(results):
         results (_type_): _description_
     """
 
-    results['trading_volume'] = (results['reinvestment']
-                                 + results['monthly_contribution']
-                                 * results['duration_in_months'])
+    results['trading_volume'] = (
+        results['reinvestment']
+        + results['monthly_contribution']
+        * results['duration_in_months'])
 
     results['geometric_mean_return_of_index'] = (
         results['start_value_index']
         / results['end_value_index']
         / results['duration_in_months']
+        * 12
         * 100
     )
 
-    results['investment'] = (results['transaction_cost']
-                             + results['monthly_contribution']
-                             * results['duration_in_months'])
+    results['investment'] = (
+        results['transaction_cost']
+        + results['monthly_contribution']
+        * results['duration_in_months'])
 
     results['realized_losses_and_profits'] = (
         results['realized_losses']
@@ -651,8 +709,9 @@ def calc_results_on_results(results):
         / results['investment']
     )
 
-    results['profit'] = results['investment_value_at_end'] - \
-        results['investment']
+    results['profit'] = (
+        results['investment_value_at_end']
+        - results['investment'])
 
     return results
 
