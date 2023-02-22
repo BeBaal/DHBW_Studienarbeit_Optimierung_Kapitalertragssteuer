@@ -10,16 +10,17 @@ import time
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import os
 
 
 # Declaration of class variables
 DEBUGGING = False
-SELL_OPTION = [True, False]
 CUT_INDEX_FOR_SAME_INTERVAL = True
-LIST_OF_MONTHLY_CONTRIBUTIONS = [120, 240]
-LIST_OF_INVESTMENT_DURATIONS = [240, 360]
-LIST_OF_TRANSACTION_COST = [0, 0.01]  # transaction cost per sell order
-TAX_FREE_CAPITAL_GAIN = 100  # tax free capital gain allowance
+LIST_OF_MONTHLY_CONTRIBUTIONS = [120, 180, 240, 300, 360]
+LIST_OF_INVESTMENT_DURATIONS = [120, 180, 240, 300, 360]
+LIST_OF_TRANSACTION_COST = [0.01]  # transaction cost per sell order
+TAX_FREE_CAPITAL_GAIN = 800  # tax free capital gain allowance
 FILE_PATH_FOR_IMAGES = r'./Results/Figures/'  # Path for image export
 CM = 1/2.54                  # centimeters in inches
 
@@ -31,6 +32,13 @@ def main():
     Here the loop logic over the df array is implemented as well as the
     different method calls.
     """
+    # Reset result folders
+    delete_results()
+
+    if DEBUGGING:
+        set_debugging()
+
+    matplotlib_settings()
 
     # Create result df for summary data
     results = pd.DataFrame()
@@ -50,7 +58,9 @@ def main():
 
     export_results_df_to_csv(results)
     generate_descriptive_info_results(results)
-    plot_results(results)
+    plot_distribution_of_all_results(results)
+    plot_distribution_of_specific_result(results)
+    plot_correlation_of_results(results)
 
     # get end time
     end_time = time.time()
@@ -60,82 +70,35 @@ def main():
     print('Execution time:', elapsed_time, 'seconds')
 
 
-def plot_distribution(dataframe):
-    """This method plots the distribution of the relevant keyfigures.
-
-    Args:
-        dataframe (pandas dataframe): HR KPI dataframe
-    """
-    logging.info('plot_distribution function was called')
-
-    filenpath_and_name = r'C:\FPA2\Figures\Attribute_Distribution.svg'
-
-    dataframe.hist(bins=25,
-                   figsize=(40, 40),
-                   color='b',
-                   alpha=0.6
-                   )
-
-    # plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
-
-    plt.savefig(filenpath_and_name, bbox_inches="tight")
-    plt.close()
-
-
-def plot_correlation(dataframe):
-    """This method plots the correlation of the relevant keyfigures. See also
-    https://medium.com/@szabo.bibor/how-to-create-a-seaborn-correlation-heatmap-in-python-834c0686b88e
-    for example heatmap implementation.
-
-    Args:
-        dataframe (pandas dataframe): HR KPI dataframe
-    """
-    logging.info('plot_cross_correlation function was called')
-
-    # Triangle cross correlation matrix
-    filenpath_and_name = r'C:\FPA2\Figures\Attribute_Cross_Correlation.svg'
-
-    mask = np.triu(np.ones_like(dataframe.corr(numeric_only=True),
-                                dtype=np.bool_))
-
-    heatmap = sns.heatmap(dataframe.corr(numeric_only=True),
-                          vmin=-1,
-                          vmax=1,
-                          mask=mask,
-                          annot=True,
-                          cmap='BrBG',
-                          fmt=".1f")
-
-    heatmap.set_title('Correlation Heatmap')
-
-    plt.tight_layout()
-    plt.savefig(filenpath_and_name)
-    plt.close()
-
-
-def iteration_over_sell_option(
-        initial_index_time_series,
-        results):
-    """_summary_
-
-    Args:
-        initial_index_time_series (_type_): _description_
-        results (_type_): _description_
-
-    Returns:
-        _type_: _description_
+def delete_results():
+    """For convenience and error pruning this function deletes the old results
+    files from the result folders of the clustering figures. The descriptive
+    summary does not get deleted.
     """
 
-    # ToDo iteration_over_sell_option needs to be implemented
+    paths = [r'./Results/Figures/',
+             r'./Results/tables/',
+             r'./Calculation_Files/',
+             r'./Logfiles/'
+             ]
 
-    # for sell_option in SELL_OPTION:
+    for path in paths:
+        for file_name in os.listdir(path):
 
-    # results = iteration_over_monthly_investment_sum(
-    #     initial_index_time_series,
-    #     results,
-    #     sell_option)
+            # construct full file path
+            file = path + file_name
+            if os.path.isfile(file):
+                os.remove(file)
 
-    return results
+
+def matplotlib_settings():
+    """This function sets the matplotlib global export settings either for
+    Powerpoint or Word relating to the option that was set in the class
+    variables.
+    """
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams["font.size"] = "12"
+    plt.rcParams["figure.figsize"] = (15*CM, 5*CM)
 
 
 def iteration_over_monthly_investment_sum(
@@ -310,9 +273,9 @@ def set_debugging():
     global LIST_OF_INVESTMENT_DURATIONS
     global LIST_OF_TRANSACTION_COST
     DEBUGGING = True
-    LIST_OF_MONTHLY_CONTRIBUTIONS = [100, 200, 300]
-    LIST_OF_INVESTMENT_DURATIONS = [12, 24]
-    LIST_OF_TRANSACTION_COST = [0, 0.01]
+    LIST_OF_MONTHLY_CONTRIBUTIONS = [100]
+    LIST_OF_INVESTMENT_DURATIONS = [12]
+    LIST_OF_TRANSACTION_COST = [0.01]
 
 
 def load_data():
@@ -381,9 +344,7 @@ def end_of_capital_year(
 
     tax_free_capital_gain = TAX_FREE_CAPITAL_GAIN
     transaction_sum = 0.0
-    former_period_index = current_period_index - 12
-    if former_period_index < 0:
-        former_period_index = 0
+    former_period_index = 0
 
     current_value_of_index = df_calc.value_in_usd.values[current_period_index]
 
@@ -407,11 +368,11 @@ def end_of_capital_year(
             former_period_index += 1
             continue
 
-        # Check if tax free capital gain allowance is available
-        # greater than the profit in the period and if profit is
-        # greater then rest allowance.
-        if tax_free_capital_gain > df_calc.not_taxed_profit.values[former_period_index] \
-                and tax_free_capital_gain >= 0:
+        if (tax_free_capital_gain > df_calc.not_taxed_profit.values[former_period_index]
+                and tax_free_capital_gain != 0):
+            # Check if tax free capital gain allowance is available
+            # greater than the profit in the period and if profit is
+            # greater then rest allowance.
 
             # Add order value to transaction sum
             transaction_sum = (
@@ -432,7 +393,7 @@ def end_of_capital_year(
             # All profits of the period were sold
             df_calc.not_taxed_profit.values[former_period_index] = 0
 
-            # Zero the buy order
+            # The investment in this period is sold
             df_calc.not_taxed_investment.values[former_period_index] = 0
 
         else:
@@ -448,19 +409,24 @@ def end_of_capital_year(
                     / tax_free_capital_gain)
             )
 
+            # Keep track of the partial taxed profits for statistics
+            df_calc.taxed_profit.values[former_period_index] = (
+                df_calc.taxed_profit.values[former_period_index]
+                - tax_free_capital_gain
+                + df_calc.not_taxed_profit.values[former_period_index])
+
+            # Add order value to transaction sum
+            transaction_sum = (
+                transaction_sum
+                + df_calc.taxed_profit.values[former_period_index]
+                + monthly_investment_sum
+                - df_calc.not_taxed_investment.values[former_period_index])
+
             # Code only runs when allowance is smaller then profits.
             # Therefore the allowance is zero
             tax_free_capital_gain = 0
 
         former_period_index += 1
-
-    # Save the transaction sum as a reinvestment
-    df_calc.reinvestment.values[current_period_index] = transaction_sum
-
-    # Create a new buy order so it can be taxed in the future
-    df_calc.not_taxed_investment.values[current_period_index] = (
-        df_calc.reinvestment.values[current_period_index]
-        + monthly_investment_sum)
 
     # Deduct the transaction cost from the value of investment from
     # previous periods
@@ -469,6 +435,18 @@ def end_of_capital_year(
         + transaction_sum
         * transaction_cost
     )
+
+    # Set tax free capital gain after calculation
+    df_calc.tax_free_capital_gain.values[current_period_index] = tax_free_capital_gain
+
+    # Save the transaction sum as a reinvestment
+    df_calc.reinvestment.values[current_period_index] = transaction_sum - \
+        df_calc.transaction_cost.values[current_period_index]
+
+    # Create a new buy order so it can be taxed in the future
+    df_calc.not_taxed_investment.values[current_period_index] = (
+        df_calc.reinvestment.values[current_period_index]
+        + monthly_investment_sum)
 
 
 def table_calculation(
@@ -508,7 +486,8 @@ def table_calculation(
         df_calc,
         t_counter,
         duration,
-        monthly_investment_sum)
+        monthly_investment_sum,
+        transaction_cost)
 
     # ToDo calculate value at the end
 
@@ -552,40 +531,11 @@ def setup_calculation(
     df_calc['taxed_profit'] = float(0)
     df_calc['reinvestment'] = float(0)
     df_calc['transaction_cost'] = float(0)
+    df_calc['tax_free_capital_gain'] = np.nan
 
     df_calc.reset_index(drop=True, inplace=True)
 
     return df_calc
-
-
-def plot_results(df_results):
-    """ Does the visualization of the results.
-
-    Args:
-        df_results (pandas dataframe): Result dataframe of all calculation runs
-    """
-    # plt.subplots(figsize=(15*CM, 5*CM))
-    plt.hist(df_results.geometric_mean_return_of_index,
-             # ToDo relative bin size regarding results
-             bins=20)
-    plt.title("Histogram of mean return of index")
-    plt.xlabel("mean return of index in %")
-    plt.ylabel("count of observations")
-
-    plt.savefig(FILE_PATH_FOR_IMAGES
-                + "Histogram_geometric_mean_return_of_index.svg")
-    plt.close()
-
-    # plt.hist(df_results.roi,
-    #          # ToDo relative bin size regarding results
-    #          bins=20)
-    # plt.title("Histogram of return of investment")
-    # plt.xlabel("return of investment in %")
-    # plt.ylabel("count of observations")
-
-    # plt.savefig(FILE_PATH_FOR_IMAGES
-    #             + "Histogram_ROI.svg")
-    # plt.close()
 
 
 def generate_descriptive_info_results(results):
@@ -630,11 +580,140 @@ def plot_index_funds(initial_index_time_series):
     plt.close()
 
 
+def plot_distribution_of_all_results(inbound_results):
+    """This method plots the distribution of the relevant keyfigures.
+
+    Args:
+        dataframe (pandas dataframe): HR KPI dataframe
+    """
+
+    results = inbound_results.copy()
+
+    results.drop(['start_date',
+                  'end_date',
+                  'duration_in_months',
+                  'investment',
+                  'end_value_index',
+                  'start_value_index',
+                  'transaction_cost',
+                  'stock_market_index',
+                  'value_at_end_without_selling',
+                  'tax_free_capital_gain',
+                  'tax_free_capital_gain_count',
+                  'monthly_contribution'
+                  ],
+                 axis=1,
+                 inplace=True)
+
+    for column in results:
+
+        results[column].hist(bins=25,
+                             color='b',
+                             alpha=0.6,
+
+                             )
+
+        plt.title("Histogram " + column)
+        plt.xlabel(column)
+        plt.ylabel("count of observations")
+
+        plt.savefig(FILE_PATH_FOR_IMAGES
+                    + column
+                    + ".svg",
+                    bbox_inches="tight")
+        plt.close()
+
+
+def plot_distribution_of_specific_result(inbound_results):
+    """This method plots the distribution of the relevant keyfigures.
+
+    Args:
+        dataframe (pandas dataframe): HR KPI dataframe
+    """
+
+    results = inbound_results.query(
+        'duration_in_months=="360" & monthly_contribution=="240" & transaction_cost=="0.01"')
+
+    results.drop(['start_date',
+                  'end_date',
+                  'duration_in_months',
+                  'investment',
+                  'end_value_index',
+                  'start_value_index',
+                  'transaction_cost',
+                  'stock_market_index',
+                  'value_at_end_without_selling',
+                  'tax_free_capital_gain',
+                  'tax_free_capital_gain_count',
+                  'monthly_contribution'
+                  ],
+                 axis=1,
+                 inplace=True)
+
+    for column in results:
+
+        results[column].hist(bins=25,
+                             color='b',
+                             alpha=0.6,
+
+                             )
+
+        plt.title("Histogram " + column)
+        plt.xlabel(column)
+        plt.ylabel("count of observations")
+        plt.legend(
+            'duration_in_months == "360" & monthly_contribution == "240" & transaction_cost == "0.01"')
+
+        plt.savefig(FILE_PATH_FOR_IMAGES
+                    + column
+                    + "_sample"
+                    + ".svg",
+                    bbox_inches="tight")
+        plt.close()
+
+
+def plot_correlation_of_results(inbound_results):
+
+    results = inbound_results.copy()
+
+    results.drop(['start_date',
+                  'end_date',
+                  'duration_in_months',
+                  'investment',
+                  'end_value_index',
+                  'start_value_index',
+                  'transaction_cost',
+                  'stock_market_index',
+                  'monthly_contribution'
+                  ],
+                 axis=1,
+                 inplace=True)
+
+    # Triangle cross correlation matrix
+    mask = np.triu(np.ones_like(results.corr(numeric_only=True),
+                                dtype=np.bool_))
+
+    heatmap = sns.heatmap(results.corr(numeric_only=True),
+                          vmin=-1,
+                          vmax=1,
+                          mask=mask,
+                          annot=True,
+                          cmap='BrBG',
+                          fmt=".1f")
+
+    heatmap.set_title('Correlation Heatmap')
+
+    plt.savefig(FILE_PATH_FOR_IMAGES
+                + "Triangular_correlation_matrix.svg")
+    plt.close()
+
+
 def calc_results_on_df_calc(
         df_calc,
         t_counter,
         duration,
-        monthly_investment_sum):
+        monthly_investment_sum,
+        transaction_cost):
     """_summary_
     """
     # change to pandas series
@@ -659,7 +738,13 @@ def calc_results_on_df_calc(
 
     results['reinvestment'] = df_calc.reinvestment.sum()
 
-    results['transaction_cost'] = df_calc.transaction_cost.sum()
+    results['transaction_cost'] = transaction_cost
+
+    results['transaction_cost_sum'] = df_calc.transaction_cost.sum()
+
+    results['tax_free_capital_gain'] = df_calc.tax_free_capital_gain.sum()
+    results['tax_free_capital_gain_count'] = df_calc.tax_free_capital_gain.isin(
+        [0]).sum(axis=0)
 
     # calculate value at the end of investment
     investment_value = [
@@ -670,6 +755,17 @@ def calc_results_on_df_calc(
     ]
 
     results['investment_value_at_end'] = np.sum(investment_value)
+
+    results['value_at_end_without_selling'] = (
+        np.full((duration), monthly_investment_sum)
+        * (np.full((duration), df_calc.value_in_usd.iloc[-1])
+           / df_calc.value_in_usd.values)
+    ).sum()
+
+    results['profit_at_end_without_selling'] = (
+        results['value_at_end_without_selling']
+        - duration
+        * monthly_investment_sum)
 
     return results
 
@@ -686,16 +782,16 @@ def calc_results_on_results(results):
         + results['monthly_contribution']
         * results['duration_in_months'])
 
-    results['geometric_mean_return_of_index'] = (
-        results['start_value_index']
-        / results['end_value_index']
+    results['geometric_mean_return_of_index_in_percent_per_year'] = (
+        (results['end_value_index'] - results['start_value_index'])
+        / results['start_value_index']
         / results['duration_in_months']
         * 12
         * 100
     )
 
     results['investment'] = (
-        results['transaction_cost']
+        results['transaction_cost_sum']
         + results['monthly_contribution']
         * results['duration_in_months'])
 
@@ -707,6 +803,7 @@ def calc_results_on_results(results):
         (results['investment_value_at_end']
          - results['investment'])
         / results['investment']
+        * 100
     )
 
     results['profit'] = (
