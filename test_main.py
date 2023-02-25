@@ -21,6 +21,9 @@ from main import table_calculation
 from main import setup_calculation
 from main import set_debugging
 from main import main
+from main import calc_results_on_results
+from main import export_results_df_to_csv
+from main import generate_descriptive_info_results
 
 
 @pytest.mark.mandatory
@@ -42,6 +45,9 @@ def test_table_calculation():
     # Load Excel sheets
     test_files = []
 
+    results = pd.DataFrame()
+    new_results = pd.DataFrame()
+
     for counter, duration in enumerate(durations):
         # Load Excel file
         test_files.append(pd.read_csv(
@@ -59,10 +65,12 @@ def test_table_calculation():
                                     monthly_investment_sum=monthly_investment_sum)
 
         table_calculation(df_calc,
-                          duration,
-                          counter,
-                          monthly_investment_sum,
-                          transaction_cost)
+                                       duration,
+                                       counter,
+                                       monthly_investment_sum,
+                                       transaction_cost)
+
+        # results = pd.concat([results, new_results])
 
         df_calc = pd.read_csv(
             path_output
@@ -94,16 +102,7 @@ def test_table_calculation():
                   encoding='utf-8') as file:
             file.write(compare.report())
 
+    # results = calc_results_on_results(results)
 
-@pytest.mark.mandatory
-def test_results():
-    """Are the values calculated correct?
-    """
-    path_testfiles = './Testfiles/'
-    path_output = './Calculation_Files/'
-
-    # set_debugging()
-
-    # table_array = load_data()
-
-    # main()
+    # export_results_df_to_csv(results)
+    # generate_descriptive_info_results(results)
