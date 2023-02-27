@@ -18,11 +18,11 @@ import seaborn as sns
 DEBUGGING = False
 CUT_INDEX_FOR_SAME_INTERVAL = True
 LIST_OF_MONTHLY_CONTRIBUTIONS = [120, 180, 240, 300, 360]
-LIST_OF_MONTHLY_CONTRIBUTIONS = [240]
+# LIST_OF_MONTHLY_CONTRIBUTIONS = [240]
 LIST_OF_INVESTMENT_DURATIONS = [120, 180, 240, 300, 360]
-LIST_OF_INVESTMENT_DURATIONS = [240]
+# LIST_OF_INVESTMENT_DURATIONS = [240]
 LIST_OF_TRANSACTION_COST = [0.01, 0.02]  # transaction cost per sell order
-LIST_OF_TRANSACTION_COST = [0.01]  # transaction cost per sell order
+# LIST_OF_TRANSACTION_COST = [0.01]  # transaction cost per sell order
 TAX_FREE_CAPITAL_GAIN = 801  # tax free capital gain allowance
 FILE_PATH_FOR_IMAGES = r'./Results/Figures/'  # Path for image export
 CM = 1/2.54                  # centimeters in inches
@@ -63,6 +63,7 @@ def main():
     generate_descriptive_info_results(results)
     plot_distribution_of_all_results(results)
     plot_distribution_of_specific_result(results)
+    plot_scatter(results)
     plot_correlation_of_results(results)
 
     # get end time
@@ -271,6 +272,9 @@ def iteration_over_time_slices(
 def set_debugging():
     """_summary_
     """
+
+    # Using the global keyword is not regarded as best practice but in
+    # this case it seems fine for setting class parameters for debugging.
     global DEBUGGING
     global LIST_OF_MONTHLY_CONTRIBUTIONS
     global LIST_OF_INVESTMENT_DURATIONS
@@ -280,7 +284,7 @@ def set_debugging():
     LIST_OF_MONTHLY_CONTRIBUTIONS = [200]
     LIST_OF_INVESTMENT_DURATIONS = [12]
     LIST_OF_TRANSACTION_COST = [0.01]
-    TAX_FREE_CAPITAL_GAIN = 11
+    TAX_FREE_CAPITAL_GAIN = 801
 
 
 def load_data():
@@ -337,14 +341,12 @@ def load_data():
 def end_of_capital_year(
         df_calc,
         current_period_index,
-        monthly_investment_sum,
         transaction_cost):
     """_summary_
 
     Args:
         df_calc (_type_): _description_
         r_counter (_type_): _description_
-        monthly_investment_sum (_type_): _description_
         transaction_cost (_type_): _description_
     """
 
@@ -354,8 +356,7 @@ def end_of_capital_year(
 
     current_value_of_index = df_calc.value_in_usd.values[current_period_index]
 
-    # ToDo Extract function lookup former capital gains
-    # Look back in table for capital gains and losses
+    # Look back in table for capital gains
     while former_period_index < current_period_index:
 
         # Calculate still to be taxed_profit on a row basis
@@ -375,29 +376,8 @@ def end_of_capital_year(
 
         # If the profit is negative do not sell
         if df_calc.not_taxed_change.values[former_period_index] < 0:
-
-            # 1 Save loss for statistic
-            df_calc.taxed_losses.values[former_period_index] = (
-                df_calc.taxed_losses.values[former_period_index]
-                + df_calc.not_taxed_change.values[former_period_index]
-            )
-
-            # 2 Add order value to transaction sum
-            transaction_sum = (
-                transaction_sum
-                + df_calc.not_taxed_change.values[former_period_index]
-                + df_calc.not_taxed_investment.values[former_period_index])
-
-            # 3 Do not detract loss from tax free allowance
-
-            # 4 All profits of the period were sold
-            df_calc.not_taxed_change.values[former_period_index] = 0
-
-            # 5 The investment in this period is sold
-            df_calc.not_taxed_investment.values[former_period_index] = 0
-
-            former_period_index += 1
-            continue
+            # jump out of loop
+            break
 
         # Profit must be positive
         # Does the tax free allowance allow selling of all profits?
@@ -436,8 +416,9 @@ def end_of_capital_year(
 
             # 1 Add order value to transaction sum. Both the investment as well
             # as the change need to be added to the transaction sum.
-            transaction_sum += (
-                df_calc.not_taxed_investment.values[former_period_index]
+            transaction_sum = (
+                transaction_sum
+                + df_calc.not_taxed_investment.values[former_period_index]
                 * (1 - tax_free_capital_gain
                    / df_calc.not_taxed_change.values[former_period_index])
                 + df_calc.not_taxed_change.values[former_period_index]
@@ -479,20 +460,25 @@ def end_of_capital_year(
 
     # Deduct the transaction cost from the value of investment from
     # previous periods
-    df_calc.transaction_cost.values[current_period_index] += (
+    df_calc.transaction_cost.values[current_period_index] = (
+        df_calc.transaction_cost.values[current_period_index]
         + (transaction_sum * transaction_cost))
 
     # Set tax free capital gain and remaining allowance after calculation
-    df_calc.remaining_tax_free_capital_gain.values[current_period_index] = tax_free_capital_gain
-    df_calc.realized_tax_free_capital_gain.values[
-        current_period_index] = TAX_FREE_CAPITAL_GAIN - tax_free_capital_gain
+    df_calc.remaining_tax_free_capital_gain.values[current_period_index] = (
+        tax_free_capital_gain)
+    df_calc.realized_tax_free_capital_gain.values[current_period_index] = (
+        TAX_FREE_CAPITAL_GAIN - tax_free_capital_gain)
 
     # Save the transaction sum as a reinvestment
-    df_calc.reinvestment.values[current_period_index] += transaction_sum
+    df_calc.reinvestment.values[current_period_index] = (
+        df_calc.reinvestment.values[current_period_index]
+        + transaction_sum)
 
     # Create a new buy order so it can be taxed in the future
-    df_calc.not_taxed_investment.values[current_period_index] += (
-        transaction_sum
+    df_calc.not_taxed_investment.values[current_period_index] = (
+        df_calc.not_taxed_investment.values[current_period_index]
+        + transaction_sum
         - (transaction_sum * transaction_cost)
     )
 
@@ -522,9 +508,9 @@ def table_calculation(
     df_calc.reset_index(drop=True)
 
     # Loop over each december period in table
+    # Assignment to nothing is wanted, function works inplace
     [end_of_capital_year(df_calc,
                          index,
-                         monthly_investment_sum,
                          transaction_cost)
      for index, month in zip(df_calc.index.values, df_calc.month.values)
      if month == 12 and index != 0
@@ -537,8 +523,8 @@ def table_calculation(
         monthly_investment_sum,
         transaction_cost)
 
-    # if DEBUGGING is True:
-    export_calc_df_to_csv(df_calc, t_counter)
+    if DEBUGGING is True:
+        export_calc_df_to_csv(df_calc, t_counter)
 
     return results
 
@@ -574,7 +560,6 @@ def setup_calculation(
     df_calc['not_taxed_investment'] = float(monthly_investment_sum)
     df_calc['not_taxed_change'] = float(0)
     df_calc['taxed_profit'] = float(0)
-    df_calc['taxed_losses'] = float(0)
     df_calc['reinvestment'] = float(0)
     df_calc['transaction_cost'] = float(0)
     df_calc['remaining_tax_free_capital_gain'] = np.nan
@@ -585,14 +570,24 @@ def setup_calculation(
     return df_calc
 
 
-def generate_descriptive_info_results(results):
+def generate_descriptive_info_results(inbound_results):
     """_summary_
 
     Args:
         results (_type_): _description_
     """
-    results.describe().to_csv(
+
+    inbound_results.describe().to_csv(
         './Results/tables/Result_Descriptive_Info.CSV'
+    )
+
+    results = inbound_results.loc[(
+        inbound_results['duration_in_months'] == 240)
+        & (inbound_results['monthly_contribution'] == 240)
+        & (inbound_results['transaction_cost'] == 0.01)].copy()
+
+    results.describe().to_csv(
+        './Results/tables/Result_Descriptive_Info_Sample.CSV'
     )
 
 
@@ -680,7 +675,7 @@ def plot_distribution_of_specific_result(inbound_results):
     results = inbound_results.loc[(
         inbound_results['duration_in_months'] == 240)
         & (inbound_results['monthly_contribution'] == 240)
-        & (inbound_results['transaction_cost'] == 0.01)]
+        & (inbound_results['transaction_cost'] == 0.01)].copy()
 
     results.drop(['start_date',
                   'end_date',
@@ -708,6 +703,7 @@ def plot_distribution_of_specific_result(inbound_results):
         plt.xlabel(name_of_column)
         plt.ylabel("count of observations")
         plt.savefig(FILE_PATH_FOR_IMAGES
+                    + "Distribution_"
                     + column
                     + "_sample"
                     + ".svg",
@@ -716,7 +712,11 @@ def plot_distribution_of_specific_result(inbound_results):
 
 
 def plot_correlation_of_results(inbound_results):
+    """_summary_
 
+    Args:
+        inbound_results (_type_): _description_
+    """
     results = inbound_results.copy()
 
     results.drop(['start_date',
@@ -745,9 +745,49 @@ def plot_correlation_of_results(inbound_results):
 
     heatmap.set_title('Correlation Heatmap')
 
+    plt.figure(figsize=(21*CM, 29.7*CM))
+
     plt.savefig(FILE_PATH_FOR_IMAGES
                 + "Triangular_correlation_matrix.svg")
     plt.close()
+
+
+def plot_scatter(inbound_results):
+    """_summary_
+
+    Args:
+        inbound_results (_type_): _description_
+    """
+    results = inbound_results.copy()
+
+    results.drop(['start_date',
+                  'end_date',
+                  'start_value_index',
+                  'transaction_cost',
+                  'stock_market_index',
+                  'monthly_contribution'
+                  ],
+                 axis=1,
+                 inplace=True)
+
+    for keyfigure_x in results:
+
+        sns.scatterplot(
+            data=results,
+            x=results.tax_savings_minus_cost_of_strategy_relative_to_investment_sum,
+            y=keyfigure_x)
+
+        plt.title("Scatterplot relative tax difference " + keyfigure_x)
+        plt.xlabel("relative difference still to be taxed value at end")
+        plt.ylabel(keyfigure_x.replace('_', ' '))
+
+        plt.tight_layout()
+
+        plt.savefig(FILE_PATH_FOR_IMAGES
+                    + "Scatterplot_"
+                    + keyfigure_x
+                    + ".svg",)
+        plt.close()
 
 
 def calc_results_on_df_calc(
@@ -771,8 +811,6 @@ def calc_results_on_df_calc(
     results['end_value_index'] = df_calc.value_in_usd.iloc[-1]
 
     results['monthly_contribution'] = monthly_investment_sum
-
-    results['realized_losses'] = df_calc.taxed_losses.sum()
 
     results['realized_profits'] = df_calc.taxed_profit.sum()
 
@@ -820,12 +858,8 @@ def calc_results_on_df_calc(
         * np.full((duration), df_calc.value_in_usd.iloc[-1]
                   / df_calc.value_in_usd.values)
         - np.full((duration), monthly_investment_sum)
-    ).sum()
-
-    results['still_to_be_taxed_value_at_end_difference'] = (
-        results['still_to_be_taxed_value_at_end_without_selling']
-        - results['still_to_be_taxed_value_at_end']
-    )
+    ).sum()  # type: ignore
+    # false positive type error. Operation is allowed
 
     return results
 
@@ -837,6 +871,11 @@ def calc_results_on_results(results):
         results (_type_): _description_
     """
 
+    results['still_to_be_taxed_value_at_end_difference'] = (
+        results['still_to_be_taxed_value_at_end_without_selling']
+        - results['still_to_be_taxed_value_at_end']
+    )
+
     results['geometric_mean_return_of_index_in_percent_per_year'] = (
         (results['end_value_index'] - results['start_value_index'])
         / results['start_value_index']
@@ -845,8 +884,35 @@ def calc_results_on_results(results):
         * 100
     )
 
+    results['tax_savings'] = (
+        results['still_to_be_taxed_value_at_end_difference']
+        * (1-0.26375)
+    )
+
     results['loss_due_to_strategy'] = results['investment_value_at_end'] - \
         results['investment_value_at_end_without_selling']
+
+    results['tax_savings_minus_cost_of_strategy'] = (
+        results['still_to_be_taxed_value_at_end_difference']
+        * (1-0.26375)
+        + results['loss_due_to_strategy']
+    )
+
+    results['tax_savings_minus_cost_of_strategy_relative_to_investment_sum'] = (
+        results['tax_savings_minus_cost_of_strategy']
+        / (results['duration_in_months']
+            * results['monthly_contribution']
+           )
+    )
+
+    results['tax_free_capital_gain_count_rela
+            tive'] = (
+        results['tax_free_capital_gain_count']
+        / (results['duration_in_months']
+           / 12
+           - 1
+           )
+    )
 
     return results
 
