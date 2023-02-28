@@ -1,8 +1,9 @@
-"""This module is part of my science project at the DHBW CAS. Primary goal is
-   to calculate a timeseries of investments into exchange traded index funds.
-   Each december the program decides to sell stocks according to the yearly
-   tax free capital gain. Results are compared to all time intervals in the
-   dataset for the amount of the investment period.
+"""This module is part of my science project at the DHBW CAS. Primary
+    goal is to calculate a timeseries of investments into exchange
+    traded index funds. Each december the program decides to sell stocks
+    according to the yearly tax free capital gain. Results are compared
+    to all time intervals in the dataset for the amount of the
+    investment period.
     """
 
 # Import Statements
@@ -18,77 +19,82 @@ import seaborn as sns
 DEBUGGING = False
 CUT_INDEX_FOR_SAME_INTERVAL = True
 LIST_OF_MONTHLY_CONTRIBUTIONS = [120, 180, 240, 300, 360]
-# LIST_OF_MONTHLY_CONTRIBUTIONS = [240]
 LIST_OF_INVESTMENT_DURATIONS = [120, 180, 240, 300, 360]
-# LIST_OF_INVESTMENT_DURATIONS = [240]
-LIST_OF_TRANSACTION_COST = [0.01, 0.02]  # transaction cost per sell order
-# LIST_OF_TRANSACTION_COST = [0.01]  # transaction cost per sell order
-TAX_FREE_CAPITAL_GAIN = 801  # tax free capital gain allowance
-FILE_PATH_FOR_IMAGES = r'./Results/Figures/'  # Path for image export
-CM = 1/2.54                  # centimeters in inches
+LIST_OF_TRANSACTION_COST = [0.01, 0.02]
+TAX_FREE_CAPITAL_GAIN = 801
+FILE_PATH_FOR_IMAGES = r'./Results/Figures/'
+CM = 1/2.54                  # conversion rate centimeters to inches
 
 
 def main():
     """
     This is the main method of the program.
 
-    Here the loop logic over the df array is implemented as well as the
-    different method calls.
+    Here most of the function calls are made as well as the start of the
+    iteration.
     """
     # Reset result folders
     delete_results()
 
+    # Sets some class parameters differently for debugging
     if DEBUGGING:
         set_debugging()
 
+    # Sets some general matplotlib settings
     matplotlib_settings()
 
     # Create result df for summary data
     results = pd.DataFrame()
 
-    # get the start time
+    # get the start time for run time calculation
     start_time = time.time()
 
-    # Create array of dataframes for looping
+    # Create array of index dataframes for looping
     initial_index_time_series = load_data()
 
+    # Plot the initial index performance
     plot_index_funds(initial_index_time_series)
 
+    # Deep iteration over a few complicated functions
     results = iteration_over_monthly_investment_sum(
         initial_index_time_series, results)
 
+    # Feature Engineering with the result table
     results = calc_results_on_results(results)
 
     export_results_df_to_csv(results)
+
+    # Export some descriptive information regarding the result
     generate_descriptive_info_results(results)
+
+    # plot the result table
     plot_distribution_of_all_results(results)
     plot_distribution_of_specific_result(results)
     plot_scatter(results)
-    plot_correlation_of_results(results)
 
     # get end time
     end_time = time.time()
 
-    # calculate calculation time
+    # calculate calculation time and print to console
     elapsed_time = end_time - start_time
     print('Execution time:', elapsed_time, 'seconds')
 
 
 def delete_results():
-    """For convenience and error pruning this function deletes the old results
-    files from the result folders of the clustering figures. The descriptive
-    summary does not get deleted.
+    """For convenience and error pruning this function deletes the old
+    results files from the export folders.
     """
 
+    # declare some paths for deletion
     paths = [r'./Results/Figures/',
              r'./Results/tables/',
              r'./Calculation_Files/',
              r'./Logfiles/'
              ]
 
+    # loop over paths and delete files if possible
     for path in paths:
         for file_name in os.listdir(path):
-
             # construct full file path
             file = path + file_name
             if os.path.isfile(file):
@@ -96,9 +102,7 @@ def delete_results():
 
 
 def matplotlib_settings():
-    """This function sets the matplotlib global export settings either for
-    Powerpoint or Word relating to the option that was set in the class
-    variables.
+    """This function sets the matplotlib global export settings for Word.
     """
     plt.rcParams["font.family"] = "Times New Roman"
     plt.rcParams["font.size"] = "12"
@@ -108,14 +112,16 @@ def matplotlib_settings():
 def iteration_over_monthly_investment_sum(
         initial_index_time_series,
         results):
-    """_summary_
+    """This function iterates over the list of monthly investment sums
+        and calls the next iteration
 
     Args:
-        initial_index_time_series (_type_): _description_
-        results (_type_): _description_
+        initial_index_time_series (array of pandas dataframes):
+        dataframe with the index time series
+        results (pandas dataframe): Empty dataframe
 
     Returns:
-        _type_: _description_
+        pandas dataframe: Result table with observations
     """
 
     for monthly_investment_sum in LIST_OF_MONTHLY_CONTRIBUTIONS:
@@ -128,18 +134,21 @@ def iteration_over_monthly_investment_sum(
     return results
 
 
-def iteration_over_transaction_cost(initial_index_time_series,
-                                    results,
-                                    monthly_investment_sum):
-    """_summary_
+def iteration_over_transaction_cost(
+        initial_index_time_series,
+        results,
+        monthly_investment_sum):
+    """This function iterates over the list of transaction costs and
+        calls the next iteration.
 
     Args:
-        initial_index_time_series (_type_): _description_
-        results (_type_): _description_
-        monthly_investment_sum (_type_): _description_
+        initial_index_time_series (array of pandas dataframes):
+            dataframe with the index time series
+        results (pandas dataframe): Dataframe of simulation results
+        monthly_investment_sum (int): How much the monthly investment is
 
     Returns:
-        _type_: _description_
+        pandas dataframe: Result table with observations
     """
 
     for transaction_cost in LIST_OF_TRANSACTION_COST:
@@ -158,16 +167,19 @@ def iteration_over_investment_duration(
         results,
         monthly_investment_sum,
         transaction_cost):
-    """_summary_
+    """This function iterates over the list of investment durations and
+        calls the next iteration.
 
     Args:
-        initial_index_time_series (_type_): _description_
-        results (_type_): _description_
-        monthly_investment_sum (_type_): _description_
-        transaction_cost (_type_): _description_
+        initial_index_time_series (array of pandas dataframes):
+            dataframe with the index time series
+        results (pandas dataframe): Dataframe of simulation results
+        monthly_investment_sum (int): How much the monthly investment is
+        transaction_cost (float): How much the transaction cost is
+            ex. 0.01
 
     Returns:
-        _type_: _description_
+        pandas dataframe: Result table with observations
     """
     for duration in LIST_OF_INVESTMENT_DURATIONS:
 
@@ -182,27 +194,29 @@ def iteration_over_investment_duration(
 
 
 def iteration_over_index_funds(
-        initial_index_time_series, results,
+        initial_index_time_series,
+        results,
         monthly_investment_sum,
         transaction_cost,
         duration):
-    """_summary_
+    """This function iterates over the array of index funds and
+        calls the next iteration.
 
     Args:
-        initial_index_time_series (_type_): _description_
-        results (_type_): _description_
-        monthly_investment_sum (_type_): _description_
-        transaction_cost (_type_): _description_
-        duration (_type_): _description_
+        initial_index_time_series (array of pandas dataframes):
+            dataframe with the index time series
+        results (pandas dataframe): Dataframe of simulation results
+        monthly_investment_sum (int): How much the monthly investment is
+        transaction_cost (float): How much the transaction cost is
+            ex. 0.01
+        duration (int): How long to invest for
 
     Returns:
-        _type_: _description_
+        pandas dataframe: Dataframe of simulation results
     """
 
-    index_time_series = initial_index_time_series.copy()
-
     # loop over all index time series
-    for index_counter, _ in enumerate(index_time_series):
+    for index_counter, _ in enumerate(initial_index_time_series):
 
         results = iteration_over_time_slices(
             initial_index_time_series,
@@ -222,38 +236,52 @@ def iteration_over_time_slices(
         monthly_investment_sum,
         transaction_cost,
         duration):
-    """_summary_
+    """This function iterates over all possible time slices in the data
+        and calls the preparation function as well as the calculation
+        function. Also the concatenation of the results is done here.
 
     Args:
-        initial_index_time_series (_type_): _description_
-        results (_type_): _description_
-        index_counter (_type_): _description_
-        monthly_investment_sum (_type_): _description_
-        transaction_cost (_type_): _description_
-        duration (_type_): _description_
+        initial_index_time_series (array of pandas dataframes):
+            dataframe with the index time series
+        results (pandas dataframe): Dataframe of simulation results
+        index_counter (int): Number of index in the dataframe array
+        monthly_investment_sum (int): How much the monthly investment is
+        transaction_cost (float): How much the transaction cost is
+            ex. 0.01
+        duration (int): How long to invest for
 
     Returns:
-        _type_: _description_
+        pandas dataframe: Dataframe of simulation results
     """
 
+    # Initialize dataframe with copy
     df_calc = initial_index_time_series[index_counter].copy()
 
-    # Start Value / how many months in dataset
-    upper_bound_month = duration
-    lower_bound_month = 0      # Start Value / end upper_bound minus months
-    max_lower_bound_month = len(df_calc.index) - duration
+    # set some initial values for the first time slice
+    upper_bound_month = duration  # How many months are in dataset
+    lower_bound_month = 0        # Start with first period
+
+    # The maximum lower bound is the length of time series minus
+    # investment duration
+    max_lower_bound_month = (
+        len(df_calc.index)
+        - duration)
 
     # Iterate over all time intervals in the dataset
     while lower_bound_month <= max_lower_bound_month:
 
-        # Reset df
+        # Reset dataframe for each time slice
         df_calc = initial_index_time_series[index_counter].copy()
-        df_calc = setup_calculation(df_calc,
-                                    lower_bound_month,
-                                    upper_bound_month,
-                                    monthly_investment_sum
-                                    )
 
+        # Do some preparation for the calculation
+        df_calc = setup_calculation(
+            df_calc,
+            lower_bound_month,
+            upper_bound_month,
+            monthly_investment_sum
+        )
+
+        # Do the calculation and return new observations
         new_results = table_calculation(
             df_calc,
             duration,
@@ -261,8 +289,10 @@ def iteration_over_time_slices(
             monthly_investment_sum,
             transaction_cost)
 
+        # Concat old results with new results
         results = pd.concat([results, new_results])
 
+        # iterate over all available time slices in the data
         upper_bound_month += 1
         lower_bound_month += 1
 
@@ -270,7 +300,7 @@ def iteration_over_time_slices(
 
 
 def set_debugging():
-    """_summary_
+    """This function sets some class variables for debugging.
     """
 
     # Using the global keyword is not regarded as best practice but in
@@ -288,9 +318,10 @@ def set_debugging():
 
 
 def load_data():
-    """This function load the index fund timeseries and gives the result
+    """This function loads the index fund timeseries and gives the result
     back in a dataframe. There are four index timeseries. One for
-    debugging as well as three different indexes.
+    debugging as well as three different indexes. In the finished study
+    MSCI ACWI was not used due to the long runtime of the program.
 
     Returns:
         pandas dataframe:  Initial index fund time series
@@ -299,9 +330,9 @@ def load_data():
     xls = pd.ExcelFile(
         '../daten/daten_Studienarbeit_Optimierung_Kapitalertragssteuer.xlsx')
 
-    # Load Excel sheets
     sheets = []
 
+    # Load Excel sheets
     if DEBUGGING is True:
         sheets.append(pd.read_excel(xls, 'Testdata', header=0))
     else:
@@ -312,6 +343,7 @@ def load_data():
     # Create array of dataframes
     initial_df_array = []
 
+    # List comprehension for loading the dataframes
     initial_df_array = [pd.DataFrame(data=sheet, columns=['date', 'value_in_usd'])
                         for sheet in sheets]
 
@@ -329,6 +361,8 @@ def load_data():
             day=df['date'].dt.day)
         for df in initial_df_array]
 
+    # The indexes have different start dates. If the option is set this
+    # code cuts them down to the same length.
     if CUT_INDEX_FOR_SAME_INTERVAL:
         # Filter data to the smallest denominator of the time series
         initial_df_array = [
@@ -342,18 +376,24 @@ def end_of_capital_year(
         df_calc,
         current_period_index,
         transaction_cost):
-    """_summary_
+    """This is the most complex function in the program where most of the
+        logic is handled. The function is called in each december and
+        calculates the appropriate calculation table.
 
     Args:
-        df_calc (_type_): _description_
-        r_counter (_type_): _description_
-        transaction_cost (_type_): _description_
+        df_calc (pandas dataframe): Dataframe in which the calculation
+            is done
+        current_period_index (int): The current period in the dataframe
+        transaction_cost (float): How much is the transaction cost
+            ex. 0.01
     """
 
+    # setting some initial values for the calculation
     tax_free_capital_gain = TAX_FREE_CAPITAL_GAIN
     transaction_sum = 0.0
     former_period_index = 0
 
+    # Gets the current value of the index
     current_value_of_index = df_calc.value_in_usd.values[current_period_index]
 
     # Look back in table for capital gains
@@ -368,7 +408,7 @@ def end_of_capital_year(
             - df_calc.not_taxed_investment.values[former_period_index]
         )
 
-        # Skip zero lines, NaN and zero allowance
+        # Skip zero profit and zero allowance
         if (df_calc.not_taxed_change.values[former_period_index] == 0
                 or tax_free_capital_gain == 0):
             former_period_index += 1
@@ -376,7 +416,7 @@ def end_of_capital_year(
 
         # If the profit is negative do not sell
         if df_calc.not_taxed_change.values[former_period_index] < 0:
-            # jump out of loop
+            # jump out of while loop
             break
 
         # Profit must be positive
@@ -384,7 +424,7 @@ def end_of_capital_year(
         if (tax_free_capital_gain
                 > df_calc.not_taxed_change.values[former_period_index]):
 
-            # 1 Save profit for statistic
+            # 1 Save profit for statistics
             df_calc.taxed_profit.values[former_period_index] = (
                 df_calc.taxed_profit.values[former_period_index]
                 + df_calc.not_taxed_change.values[former_period_index]
@@ -412,10 +452,11 @@ def end_of_capital_year(
 
         else:
             # If the rest allowance is smaller then the profit, the
-            # buy order needs to be split into two parts.
+            # buy order needs to be split into two parts because it can
+            # not be realized completely .
 
-            # 1 Add order value to transaction sum. Both the investment as well
-            # as the change need to be added to the transaction sum.
+            # 1 Add order value to transaction sum. Both the investment
+            # as well as the change need to be added to transaction sum.
             transaction_sum = (
                 transaction_sum
                 + df_calc.not_taxed_investment.values[former_period_index]
@@ -452,6 +493,7 @@ def end_of_capital_year(
             former_period_index += 1
             continue
 
+    # Some debugging code. These conditions should not be possible.
     if transaction_sum < 0:
         print("Transaction Sum is negative")
 
@@ -475,7 +517,8 @@ def end_of_capital_year(
         df_calc.reinvestment.values[current_period_index]
         + transaction_sum)
 
-    # Create a new buy order so it can be taxed in the future
+    # Create a new buy order from the reinvestment so it can be taxed in
+    # the future
     df_calc.not_taxed_investment.values[current_period_index] = (
         df_calc.not_taxed_investment.values[current_period_index]
         + transaction_sum
@@ -486,28 +529,29 @@ def end_of_capital_year(
 def table_calculation(
         df_calc,
         duration,
-        t_counter,
+        index_counter,
         monthly_investment_sum,
         transaction_cost):
     """
-    This method handles most of the df calculation on a row level.
+    This method loops over all periods in the dataframe and calls the
+    end of capital year function
 
     Args:
-        df_calc (dataframe): table on which the calculation is done
-        months (integer): How long you invest for in months?
-        t_counter (integer): Which index is used. Is put into result table
-        transaction_cost (float): How much percent costs a buy sell order?
+        df_calc (dataframe): Table on which the calculation is done
+        duration (integer): How long you invest for in months
+        index_counter (integer): Which index is used
         tax_free_capital_gain (integer): Tax free capital gain
+        monthly_investment_sum (int): How much is invested monthly
 
     Returns:
-        Two dataframes as an array: The calculation table and the result
-                                    table row are returned.
+        pandas dataframe: Dataframe of simulation results
     """
 
     # method variables
     df_calc.reset_index(drop=True)
 
-    # Loop over each december period in table
+    # Loop over each december period in table with list comprehension
+    # In the first period there can be no profits
     # Assignment to nothing is wanted, function works inplace
     [end_of_capital_year(df_calc,
                          index,
@@ -516,15 +560,19 @@ def table_calculation(
      if month == 12 and index != 0
      ]
 
+    # Calculate results on the calculation dataframe
     results = calc_results_on_df_calc(
         df_calc,
-        t_counter,
+        index_counter,
         duration,
         monthly_investment_sum,
         transaction_cost)
 
+    # Save the calculation file when debugging
     if DEBUGGING is True:
-        export_calc_df_to_csv(df_calc, t_counter)
+        export_calc_df_to_csv(
+            df_calc,
+            index_counter)
 
     return results
 
@@ -533,18 +581,19 @@ def setup_calculation(
         df_calc,
         lower_bound_month,
         upper_bound_month,
-        monthly_investment_sum):
+        monthly_investment):
     """
     This method setups the used dfs.
 
-    A few values are calculated, columns calculated and NaN values cleaned up.
-    Also it cuts the dataframe to the proper period regarding to lower and
-    upper bound of the current analysis.
+    A few values are calculated, columns calculated and NaN values
+    cleaned up. Also it cuts the dataframe to the proper period
+    regarding to lower and upper bound of the current analysis.
 
     Args:
         df_calc (pandas dataframe):  Initial index fund time series
-        lower_bound_month (integer): start of evaluation time series
-        upper_bound_month (integer): end of evaluation time series
+        lower_bound_month (int): start of evaluation time series
+        upper_bound_month (int): end of evaluation time series
+        monthly_investment (int): how much you invest monthly
 
     Returns:
         pandas dataframe: Cut down and cleaned dataframe
@@ -557,7 +606,7 @@ def setup_calculation(
     df_calc['%-change'] = df_calc['value_in_usd'].pct_change() * 100
     # Fill NaN rows with zeroes
     df_calc['%-change'].fillna(value=0, inplace=True)
-    df_calc['not_taxed_investment'] = float(monthly_investment_sum)
+    df_calc['not_taxed_investment'] = float(monthly_investment)
     df_calc['not_taxed_change'] = float(0)
     df_calc['taxed_profit'] = float(0)
     df_calc['reinvestment'] = float(0)
@@ -565,22 +614,27 @@ def setup_calculation(
     df_calc['remaining_tax_free_capital_gain'] = np.nan
     df_calc['realized_tax_free_capital_gain'] = np.nan
 
+    # Reset index of dataframe
     df_calc.reset_index(drop=True, inplace=True)
 
     return df_calc
 
 
-def generate_descriptive_info_results(inbound_results):
-    """_summary_
+def generate_descriptive_info_results(
+        inbound_results):
+    """This function generates descriptive information on the result and
+        saves them to csv files
 
     Args:
-        results (_type_): _description_
+        inbound_results (pandas dataframe): All results of the simulation
     """
 
+    # Export all simulations
     inbound_results.describe().to_csv(
         './Results/tables/Result_Descriptive_Info.CSV'
     )
 
+    # Export only specific simulations
     results = inbound_results.loc[(
         inbound_results['duration_in_months'] == 240)
         & (inbound_results['monthly_contribution'] == 240)
@@ -592,17 +646,17 @@ def generate_descriptive_info_results(inbound_results):
 
 
 def plot_index_funds(initial_index_time_series):
-    """_summary_
+    """This function plots the index funds performance.
     """
-    path = ""
 
     # do not change the initial_index_time_series
-    index_time_series = initial_index_time_series
+    index_time_series = initial_index_time_series.copy()
 
+    # Plot indexes and set the first value to one and the rest in
+    # relation to the first
     for index in index_time_series:
         index['value_in_percent'] = [element / index.value_in_usd.values[0]
                                      for element in index.value_in_usd.values]
-
         plt.plot(index.date, index.value_in_percent)
 
     # name the dataframes for plotting
@@ -624,14 +678,17 @@ def plot_index_funds(initial_index_time_series):
 
 
 def plot_distribution_of_all_results(inbound_results):
-    """This method plots the distribution of the relevant keyfigures.
+    """This method plots the distribution of the relevant keyfigures
+        for all simulations.
 
     Args:
-        dataframe (pandas dataframe): HR KPI dataframe
+        inbound_results (pandas dataframe): results of all simulations
     """
 
+    # do not change the inbound_results
     results = inbound_results.copy()
 
+    # drop some features which do not need to be plotted
     results.drop(['start_date',
                   'end_date',
                   'duration_in_months',
@@ -643,6 +700,7 @@ def plot_distribution_of_all_results(inbound_results):
                  axis=1,
                  inplace=True)
 
+    # plot all features
     for column in results:
 
         results[column].hist(bins=25,
@@ -659,6 +717,7 @@ def plot_distribution_of_all_results(inbound_results):
         plt.ylabel("count of observations")
 
         plt.savefig(FILE_PATH_FOR_IMAGES
+                    + "Distribution_"
                     + column
                     + ".svg",
                     bbox_inches="tight")
@@ -666,17 +725,20 @@ def plot_distribution_of_all_results(inbound_results):
 
 
 def plot_distribution_of_specific_result(inbound_results):
-    """This method plots the distribution of the relevant keyfigures.
+    """This method plots the distribution of the relevant keyfigures
+        for specific simulations.
 
     Args:
-        dataframe (pandas dataframe): HR KPI dataframe
+        dataframe (inbound_results):  Result dataframe with observations
     """
 
+    # filter the results to specific hyperparameter
     results = inbound_results.loc[(
         inbound_results['duration_in_months'] == 240)
         & (inbound_results['monthly_contribution'] == 240)
         & (inbound_results['transaction_cost'] == 0.01)].copy()
 
+    # drop features which do not need to be plotted
     results.drop(['start_date',
                   'end_date',
                   'duration_in_months',
@@ -688,6 +750,7 @@ def plot_distribution_of_specific_result(inbound_results):
                  axis=1,
                  inplace=True)
 
+    # create histogram of all remaining features
     for column in results:
 
         results[column].hist(bins=25,
@@ -711,97 +774,83 @@ def plot_distribution_of_specific_result(inbound_results):
         plt.close()
 
 
-def plot_correlation_of_results(inbound_results):
-    """_summary_
-
-    Args:
-        inbound_results (_type_): _description_
-    """
-    results = inbound_results.copy()
-
-    results.drop(['start_date',
-                  'end_date',
-                  'duration_in_months',
-                  'end_value_index',
-                  'start_value_index',
-                  'transaction_cost',
-                  'stock_market_index',
-                  'monthly_contribution'
-                  ],
-                 axis=1,
-                 inplace=True)
-
-    # Triangle cross correlation matrix
-    mask = np.triu(np.ones_like(results.corr(numeric_only=True),
-                                dtype=np.bool_))
-
-    heatmap = sns.heatmap(results.corr(numeric_only=True),
-                          vmin=-1,
-                          vmax=1,
-                          mask=mask,
-                          annot=True,
-                          cmap='BrBG',
-                          fmt=".1f")
-
-    heatmap.set_title('Correlation Heatmap')
-
-    plt.figure(figsize=(21*CM, 29.7*CM))
-
-    plt.savefig(FILE_PATH_FOR_IMAGES
-                + "Triangular_correlation_matrix.svg")
-    plt.close()
-
-
 def plot_scatter(inbound_results):
-    """_summary_
+    """This method scatter plots  the relevant keyfigures for all results.
 
     Args:
-        inbound_results (_type_): _description_
+        inbound_results (pandas dataframe): Result dataframe with observations
     """
     results = inbound_results.copy()
 
-    results.drop(['start_date',
-                  'end_date',
-                  'start_value_index',
-                  'transaction_cost',
-                  'stock_market_index',
-                  'monthly_contribution'
-                  ],
-                 axis=1,
-                 inplace=True)
+    # drop features which do not need to be scatter plotted
+    results.drop(
+        ['start_date',
+         'end_date',
+         'start_value_index',
+         'stock_market_index'
+         ],
+        axis=1,
+        inplace=True)
 
+    # loop over all features and plot them
     for keyfigure_x in results:
 
+        # comparison with itself is not necessary
+        if "tax_savings_minus_cost_of_strategy_relative_to_investment_sum" == keyfigure_x:
+            continue
+
+        # do the scattering :D
         sns.scatterplot(
             data=results,
             x=results.tax_savings_minus_cost_of_strategy_relative_to_investment_sum,
             y=keyfigure_x)
 
-        plt.title("Scatterplot relative tax difference " + keyfigure_x)
-        plt.xlabel("relative difference still to be taxed value at end")
+        # Add x and y histograms with linear regression to plot
+        sns.jointplot(
+            data=results,
+            x="tax_savings_minus_cost_of_strategy_relative_to_investment_sum",
+            y=keyfigure_x,
+            kind="reg")
+
+        plt.title("Scatterplot relative tax difference "
+                  + keyfigure_x.replace('_', ' '))
+        plt.xlabel(
+            "tax savings minus cost of strategy relative to investment sum")
         plt.ylabel(keyfigure_x.replace('_', ' '))
-
         plt.tight_layout()
-
-        plt.savefig(FILE_PATH_FOR_IMAGES
-                    + "Scatterplot_"
-                    + keyfigure_x
-                    + ".svg",)
+        plt.savefig(
+            FILE_PATH_FOR_IMAGES
+            + "Scatterplot_"
+            + keyfigure_x
+            + ".png",)
         plt.close()
 
 
 def calc_results_on_df_calc(
         df_calc,
-        t_counter,
+        index_counter,
         duration,
         monthly_investment_sum,
         transaction_cost):
-    """_summary_
+    """This function calculates features on the table calculation. It
+        summarizes the calculation so to say.
+
+    Args:
+        df_calc (pandas dataframe): Calculation table
+        index_counter (int): Which index is the analysis for
+        duration (int): How long is the investment period
+        monthly_investment_sum (int): What is the monthly investment
+        transaction_cost (float): What is the transaction cost (ex. 0.01)
+
+    Returns:
+        pandas dataframe: One line in the result table
     """
-    # change to pandas series
+
+    # create empty dataframe
     results = pd.DataFrame()
 
-    results.loc[0, 'stock_market_index'] = t_counter
+    # Some simple value setting. No comment necessary
+    results.loc[0, 'stock_market_index'] = index_counter
     results['duration_in_months'] = duration
 
     results['start_date'] = df_calc.date.iloc[0]
@@ -821,18 +870,21 @@ def calc_results_on_df_calc(
     results['transaction_cost_sum'] = df_calc.transaction_cost.sum()
 
     results['remaining_tax_free_capital_gain'] = df_calc.remaining_tax_free_capital_gain.sum()
-    results['realized_tax_free_capital_gain'] = df_calc.realized_tax_free_capital_gain.sum()
-    results['tax_free_capital_gain_count'] = df_calc.remaining_tax_free_capital_gain.isin(
-        [0]).sum(axis=0)
 
-    # calculate value at the end of investment
+    results['realized_tax_free_capital_gain'] = df_calc.realized_tax_free_capital_gain.sum()
+
+    # Count all periods with completely realized tax free allowance
+    results['tax_free_capital_gain_count'] = (
+        df_calc.remaining_tax_free_capital_gain.isin([0]).sum(axis=0))
+
+    # calculate value at the end of investment with reselling
     results['investment_value_at_end'] = (
         df_calc.not_taxed_investment.values
         * df_calc.value_in_usd.values[-1]
         / df_calc.value_in_usd.values
     ).sum()
 
-    # calculate still to be taxed
+    # calculate still to be taxed profits
     results['still_to_be_taxed_value_at_end'] = (
         df_calc.not_taxed_investment.values
         * df_calc.value_in_usd.values[-1]
@@ -840,19 +892,22 @@ def calc_results_on_df_calc(
         - df_calc.not_taxed_investment.values
     ).sum()
 
+    # how much would be the transaction cost worth if you reinvested them
     results['transaction_cost_reinvested_sum'] = (
         df_calc.transaction_cost.values
         * df_calc.value_in_usd.values[-1]
         / df_calc.value_in_usd.values
     ).sum()
 
+    # calculate the worth of the monthly investments and the index
+    # without any kind of reselling or strategy
     results['investment_value_at_end_without_selling'] = (
         np.full((duration), monthly_investment_sum)
         * np.full((duration), df_calc.value_in_usd.iloc[-1]
                   / df_calc.value_in_usd.values)
     ).sum()
 
-    # calculate still to be taxed
+    # calculate still to be taxed value at end without selling
     results['still_to_be_taxed_value_at_end_without_selling'] = (
         np.full((duration), monthly_investment_sum)
         * np.full((duration), df_calc.value_in_usd.iloc[-1]
@@ -865,17 +920,19 @@ def calc_results_on_df_calc(
 
 
 def calc_results_on_results(results):
-    """_summary_
+    """This function does some feature engineering on the results table.
 
     Args:
-        results (_type_): _description_
+        results (pandas dataframe): table to feature engineer on
     """
 
+    # how much less profit needs to be taxed
     results['still_to_be_taxed_value_at_end_difference'] = (
         results['still_to_be_taxed_value_at_end_without_selling']
         - results['still_to_be_taxed_value_at_end']
     )
 
+    # calculate the geometric return of the index annually
     results['geometric_mean_return_of_index_in_percent_per_year'] = (
         (results['end_value_index'] - results['start_value_index'])
         / results['start_value_index']
@@ -884,20 +941,25 @@ def calc_results_on_results(results):
         * 100
     )
 
+    # how much taxes would you need to pay for that
     results['tax_savings'] = (
         results['still_to_be_taxed_value_at_end_difference']
-        * (1-0.26375)
+        * (1-0.26375)  # capital gains tax plus soli tax
     )
 
-    results['loss_due_to_strategy'] = results['investment_value_at_end'] - \
-        results['investment_value_at_end_without_selling']
+    # how much cost does the strategy have
+    results['loss_due_to_strategy'] = (
+        results['investment_value_at_end']
+        - results['investment_value_at_end_without_selling'])
 
+    # Are the tax savings enough to cover the costs?
     results['tax_savings_minus_cost_of_strategy'] = (
         results['still_to_be_taxed_value_at_end_difference']
         * (1-0.26375)
         + results['loss_due_to_strategy']
     )
 
+    # How does that relate to the investment sum?
     results['tax_savings_minus_cost_of_strategy_relative_to_investment_sum'] = (
         results['tax_savings_minus_cost_of_strategy']
         / (results['duration_in_months']
@@ -905,8 +967,9 @@ def calc_results_on_results(results):
            )
     )
 
-    results['tax_free_capital_gain_count_rela
-            tive'] = (
+    # On how much periods the tax free capital gains allowance is
+    # completely used up relative to the maximal count?
+    results['tax_free_capital_gain_count_relative'] = (
         results['tax_free_capital_gain_count']
         / (results['duration_in_months']
            / 12
@@ -925,20 +988,22 @@ def export_results_df_to_csv(results):
     """
 
     # Export df_results to CSV file
-    results.to_csv('./Results/tables/Result_Export.CSV', index=True)
+    results.to_csv('./Results/tables/Result_Export.CSV',
+                   index=True)
 
 
-def export_calc_df_to_csv(df_calc, t_counter):
+def export_calc_df_to_csv(df_calc, index_counter):
     """This method exports the calculation dfs to a excel file.
 
     Args:
-        df (_type_): _description_
-        t_counter (_type_): _description_
+        df_calc (pandas dataframe): The calculation table
+        index_counter (_type_): which index is used
     """
 
     df_calc.sort_index(ascending=True)
-    df_calc.to_csv('./Calculation_Files/Dataframe_Export_' +
-                   str(t_counter) + '.CSV')
+    df_calc.to_csv('./Calculation_Files/Dataframe_Export_'
+                   + str(index_counter)
+                   + '.CSV')
 
 
 # main method call

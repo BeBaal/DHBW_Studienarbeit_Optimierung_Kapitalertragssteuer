@@ -62,13 +62,13 @@ def test_table_calculation():
         df_calc = setup_calculation(df_calc,
                                     lower_bound_month=0,
                                     upper_bound_month=duration,
-                                    monthly_investment_sum=monthly_investment_sum)
+                                    monthly_investment=monthly_investment_sum)
 
         table_calculation(df_calc,
-                                       duration,
-                                       counter,
-                                       monthly_investment_sum,
-                                       transaction_cost)
+                          duration,
+                          counter,
+                          monthly_investment_sum,
+                          transaction_cost)
 
         # results = pd.concat([results, new_results])
 
