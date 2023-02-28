@@ -1,0 +1,38 @@
+DataComPy Comparison
+--------------------
+
+DataFrame Summary
+-----------------
+
+          DataFrame  Columns  Rows
+0        Test_Files       15    11
+1  Generated_Output       13    11
+
+Column Summary
+--------------
+
+Number of columns in common: 13
+Number of columns in Test_Files but not in Generated_Output: 2
+Number of columns in Generated_Output but not in Test_Files: 0
+
+Row Summary
+-----------
+
+Matched on: index
+Any duplicates on match values: No
+Absolute Tolerance: 0.01
+Relative Tolerance: 0
+Number of rows in common: 11
+Number of rows in Test_Files but not in Generated_Output: 0
+Number of rows in Generated_Output but not in Test_Files: 0
+
+Number of rows with some compared columns unequal: 0
+Number of rows with all compared columns equal: 11
+
+Column Comparison
+-----------------
+
+Number of columns compared with some values unequal: 0
+Number of columns compared with all values equal: 13
+Total number of values which compare unequal: 0
+
